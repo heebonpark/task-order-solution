@@ -87,6 +87,17 @@
   .file-chip button{background:none;border:none;color:var(--danger);cursor:pointer;font-weight:800;font-size:12px;padding:0;}
   .staff-form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:16px;}
   .tablewrap{overflow-x:auto;}
+  .insight-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .insight-bar-row .lbl{width:76px;font-size:12.5px;font-weight:700;flex:none;}
+  .insight-bar-row .bar-outer{flex:1;}
+  .insight-bar-row .val{width:120px;text-align:right;font-size:12px;color:#777;flex:none;}
+  .insight-card{border:1px solid var(--line);border-left:4px solid #ccc;border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+  .insight-card.warn{border-left-color:var(--danger);background:#fffaf8;}
+  .insight-card.info{border-left-color:var(--accent2);background:#fbfbf6;}
+  .insight-card .ic-title{font-weight:700;font-size:13.5px;margin-bottom:3px;}
+  .insight-card .ic-detail{font-size:12px;color:#777;margin-bottom:8px;}
+  .insight-card .ic-action{font-size:12.5px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 10px;}
+  .insight-card .ic-action b{color:var(--navy);}
 </style>
 </head>
 <body>
@@ -136,6 +147,17 @@
       <h2>대구분별 지시 현황</h2>
       <table><thead><tr><th>구분</th><th>진행 중</th><th>완료</th><th>지연</th><th>기타</th><th>평균 진척률</th></tr></thead>
       <tbody id="catSummary"></tbody></table>
+    </div>
+  </section>
+
+  <section id="sec-insight">
+    <div class="panel">
+      <h2>분야별 지시 분포 <small class="hint" style="font-weight:400;">— 어떤 분야에 업무가 몰려 있는지 확인합니다</small></h2>
+      <div id="insightBars"></div>
+    </div>
+    <div class="panel">
+      <h2>인사이트 · 개선 제안 <small class="hint" style="font-weight:400;">— 데이터가 바뀔 때마다 자동으로 다시 계산됩니다</small></h2>
+      <div id="insightList"></div>
     </div>
   </section>
 
@@ -291,9 +313,9 @@ const roleMeta = {
 const tierLabel = {field:"수행부서", mid:"중간관리부서", hq:"본부", admin:"관리자"};
 const tabsByTier = {
   field: [["mine","내 업무"],["reward","평가/보상"]],
-  mid:   [["dashboard","대시보드"],["orders","업무지시"],["staff","수행자 관리"],["reward","평가/보상"],["hr","결원현황"]],
-  hq:    [["dashboard","대시보드"],["orders","업무지시"],["reward","평가/보상"],["hr","결원현황"]],
-  admin: [["dashboard","대시보드"],["orders","업무지시"],["staff","수행자 관리"],["reward","평가/보상"],["hr","결원현황"]],
+  mid:   [["dashboard","대시보드"],["insight","인사이트"],["orders","업무지시"],["staff","수행자 관리"],["reward","평가/보상"],["hr","결원현황"]],
+  hq:    [["dashboard","대시보드"],["insight","인사이트"],["orders","업무지시"],["reward","평가/보상"],["hr","결원현황"]],
+  admin: [["dashboard","대시보드"],["insight","인사이트"],["orders","업무지시"],["staff","수행자 관리"],["reward","평가/보상"],["hr","결원현황"]],
 };
 let scope = { branch: branches[0], role: "담당자" };
 let currentSectionId = null;
@@ -303,6 +325,11 @@ function scopeKey(o){ return `${scope.role}|${scope.branch}|${o.id}`; }
 function unseenMineCount(){
   if(currentTier() !== "field") return 0;
   return getScopedOrders().filter(o=>!seenKeys.has(scopeKey(o))).length;
+}
+function insightWarnCount(){
+  const tier = currentTier();
+  if(tier!=="mid" && tier!=="hq" && tier!=="admin") return 0;
+  return analyzeInsights(getScopedOrders(), tier).insights.filter(i=>i.severity==="warn").length;
 }
 
 const scopeBranchSel = document.getElementById("scope-branch");
@@ -421,10 +448,10 @@ function showSection(id){
 function updateNavBadges(){
   document.querySelectorAll("#nav button").forEach(b=>{
     let html = b.dataset.label;
-    if(b.dataset.id==="mine"){
-      const n = unseenMineCount();
-      if(n>0) html += `<span class="nav-badge">${n}</span>`;
-    }
+    let n = 0;
+    if(b.dataset.id==="mine") n = unseenMineCount();
+    else if(b.dataset.id==="insight") n = insightWarnCount();
+    if(n>0) html += `<span class="nav-badge">${n}</span>`;
     b.innerHTML = html;
   });
 }
@@ -559,6 +586,100 @@ const filterChips = document.getElementById("filterChips");
 });
 
 function statusClass(s){ return "status "+s; }
+
+// 인사이트 · 개선 제안 — 대구분별 분포/지연율/완료율과 지사 과부하·결원을 규칙 기반으로 분석
+function analyzeInsights(scoped, tier){
+  const total = scoped.length;
+  const stats = {};
+  Object.keys(categories).forEach(m=>{
+    const list = scoped.filter(o=>o.major===m);
+    stats[m] = {
+      n: list.length,
+      done: list.filter(o=>o.status==="완료").length,
+      delay: list.filter(o=>o.status==="지연").length,
+      etc: list.filter(o=>o.status==="기타").length,
+    };
+  });
+
+  const insights = [];
+  if(total>0){
+    let top = null;
+    Object.keys(stats).forEach(m=>{ if(!top || stats[m].n > stats[top].n) top = m; });
+    if(stats[top].n>0){
+      const share = Math.round(stats[top].n/total*100);
+      insights.push({
+        severity: share>=40 ? "warn" : "info",
+        title: `가장 많은 지시 분야: ${top} (${stats[top].n}건, 전체의 ${share}%)`,
+        detail: Object.keys(stats).map(m=>`${m} ${stats[m].n}건`).join(" · "),
+        action: share>=40
+          ? `${top} 분야에 업무가 편중되어 있습니다. 소구분별 원인을 점검하고 인력 배분을 재검토하세요.`
+          : "특정 분야로의 쏠림은 아직 크지 않습니다."
+      });
+    }
+    Object.keys(stats).forEach(m=>{
+      const s = stats[m];
+      if(s.n>=1){
+        const rate = Math.round(s.delay/s.n*100);
+        if(rate>=25){
+          insights.push({
+            severity:"warn",
+            title: `${m} 분야 지연율 ${rate}% (${s.delay}/${s.n}건)`,
+            detail: `${m} 분야 지시 중 마감을 넘긴 건의 비중이 높습니다.`,
+            action: "우선순위 재조정 또는 담당 인력 재배치를 검토하세요."
+          });
+        }
+      }
+    });
+    Object.keys(stats).forEach(m=>{
+      const s = stats[m];
+      if(s.n>=2){
+        const rate = Math.round(s.done/s.n*100);
+        if(rate<=25){
+          insights.push({
+            severity:"warn",
+            title: `${m} 분야 완료율 ${rate}% (${s.done}/${s.n}건)`,
+            detail: `${m} 분야 진행 속도가 다른 분야보다 느립니다.`,
+            action: "목표 대비 진행 상황을 점검하고 필요 시 지원 인력을 투입하세요."
+          });
+        }
+      }
+    });
+    Object.keys(stats).forEach(m=>{
+      const s = stats[m];
+      if(s.etc>=1){
+        insights.push({
+          severity:"warn",
+          title: `${m} 분야 특이사항(기타) ${s.etc}건 발생`,
+          detail: "현장에서 기타로 등록된 특이사항이 있습니다.",
+          action: "특이사항 내용을 확인하고 공통 원인이 있는지 점검하세요."
+        });
+      }
+    });
+  }
+
+  const targetBranches = (tier==="hq"||tier==="admin") ? branches : [scope.branch];
+  const overloaded = targetBranches.filter(b=>branchLoad[b]>=4);
+  if(overloaded.length){
+    insights.push({
+      severity:"warn",
+      title: `과부하 지사 ${overloaded.length}곳: ${overloaded.join(", ")}`,
+      detail: "진행중 지시 4건 이상을 보유한 지사입니다.",
+      action: "인접 지사와의 업무 재분배 또는 임시 인력 지원을 검토하세요."
+    });
+  }
+  const vacant = targetBranches.filter(b=>hr[b].quota - hr[b].current > 0);
+  if(vacant.length){
+    insights.push({
+      severity:"warn",
+      title: `결원(재배정 필요) 지사 ${vacant.length}곳: ${vacant.join(", ")}`,
+      detail: "정원 대비 현원이 부족한 지사입니다.",
+      action: "결원 지사부터 우선 채용 또는 임시 인력 배치를 검토하세요."
+    });
+  }
+
+  insights.sort((a,b)=>(a.severity==="warn"?0:1)-(b.severity==="warn"?0:1));
+  return { stats, total, insights };
+}
 
 const TODAY = "2026-08-13";
 function recomputeStatus(o){
@@ -718,6 +839,28 @@ function render(){
       const avg = list.length ? Math.round(list.reduce((a,o)=>a+o.progress,0)/list.length) : 0;
       return `<tr><td><span class="tag ${catColor[m]}">${m}</span></td><td>${prog}</td><td>${done2}</td><td>${delay}</td><td>${etc}</td><td>${avg}%</td></tr>`;
     }).join("");
+  }
+
+  // insight (인사이트) — mid/hq/admin only
+  const insightBars = document.getElementById("insightBars");
+  const insightList = document.getElementById("insightList");
+  if(insightBars && insightList){
+    const { stats, total: insightTotal, insights } = analyzeInsights(scoped, tier);
+    insightBars.innerHTML = Object.keys(categories).map(m=>{
+      const s = stats[m];
+      const share = insightTotal ? Math.round(s.n/insightTotal*100) : 0;
+      return `<div class="insight-bar-row">
+        <div class="lbl"><span class="tag ${catColor[m]}">${m}</span></div>
+        <div class="bar-outer"><div class="bar-inner" style="width:${share}%"></div></div>
+        <div class="val">${s.n}건 · ${share}%</div>
+      </div>`;
+    }).join("") || `<div class="empty-row">데이터가 없습니다.</div>`;
+    insightList.innerHTML = insights.length ? insights.map(i=>`
+      <div class="insight-card ${i.severity}">
+        <div class="ic-title">${i.title}</div>
+        <div class="ic-detail">${i.detail}</div>
+        <div class="ic-action"><b>개선 제안</b> · ${i.action}</div>
+      </div>`).join("") : `<div class="empty-row">현재 특별히 주의가 필요한 항목이 없습니다.</div>`;
   }
 
   // order table (업무지시 목록) — scoped
