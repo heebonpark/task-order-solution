@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>통합업무지시 솔루션 운영메뉴얼</title>
+
+<style>
+  :root{
+    --bg:#f6f4ee;
+    --surface:#ffffff;
+    --surface-alt:#fbf9f3;
+    --masthead:#1d2739;
+    --masthead-text:#f3f1ea;
+    --masthead-text-dim:#c7cdd9;
+    --text:#1c2321;
+    --text-dim:#5c6560;
+    --line:#dcd7c8;
+    --accent:#b5651d;
+    --accent-strong:#8a4c14;
+    --accent-bg:#f7e9da;
+    --field:#2e5aa8;
+    --field-bg:#eaf1fb;
+    --mid:#a3691d;
+    --mid-bg:#fbf0dc;
+    --hq:#5c7a3c;
+    --hq-bg:#eef3e6;
+    --warn:#a63a3a;
+    --warn-bg:#fbe9e9;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#14171b;
+      --surface:#1b1f25;
+      --surface-alt:#20252c;
+      --masthead:#0f131a;
+      --masthead-text:#eef0ea;
+      --masthead-text-dim:#98a2ae;
+      --text:#e6e5de;
+      --text-dim:#98a29c;
+      --line:#2b3039;
+      --accent:#e0923f;
+      --accent-strong:#f0b479;
+      --accent-bg:#2c2013;
+      --field:#7fa2e0;
+      --field-bg:#1b2636;
+      --mid:#dba15a;
+      --mid-bg:#2a2013;
+      --hq:#93b876;
+      --hq-bg:#1c2417;
+      --warn:#e08585;
+      --warn-bg:#2c1a1a;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14171b;
+    --surface:#1b1f25;
+    --surface-alt:#20252c;
+    --masthead:#0f131a;
+    --masthead-text:#eef0ea;
+    --masthead-text-dim:#98a2ae;
+    --text:#e6e5de;
+    --text-dim:#98a29c;
+    --line:#2b3039;
+    --accent:#e0923f;
+    --accent-strong:#f0b479;
+    --accent-bg:#2c2013;
+    --field:#7fa2e0;
+    --field-bg:#1b2636;
+    --mid:#dba15a;
+    --mid-bg:#2a2013;
+    --hq:#93b876;
+    --hq-bg:#1c2417;
+    --warn:#e08585;
+    --warn-bg:#2c1a1a;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  h1,h2,h3{text-wrap:balance;}
+  .wrap{max-width:900px;margin:0 auto;padding:0 24px;}
+
+  /* Masthead */
+  .masthead{background:var(--masthead);color:var(--masthead-text);padding:52px 0 40px;}
+  .masthead .eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--masthead-text-dim);margin-bottom:14px;}
+  .masthead h1{font-size:clamp(26px,4vw,36px);font-weight:800;letter-spacing:-.01em;margin:0 0 12px;}
+  .masthead .lead{font-size:16px;color:var(--masthead-text-dim);max-width:62ch;margin:0 0 28px;}
+  .quicklinks{display:flex;flex-wrap:wrap;gap:10px;}
+  .qlink{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:var(--masthead-text);text-decoration:none;font-size:13.5px;font-weight:600;transition:background .15s;}
+  .qlink:hover{background:rgba(255,255,255,.13);}
+  .qlink .dot{width:8px;height:8px;border-radius:50%;flex:none;}
+
+  /* Sticky toc */
+  .toc{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);}
+  .toc .wrap{display:flex;gap:4px;overflow-x:auto;padding:0 24px;}
+  .toc a{flex:none;padding:14px 14px;font-size:13.5px;font-weight:600;color:var(--text-dim);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;}
+  .toc a:hover{color:var(--text);}
+
+  main{padding-top:8px;}
+  section{padding:52px 0;border-bottom:1px solid var(--line);}
+  section:last-of-type{border-bottom:none;}
+  .section-head{margin-bottom:28px;}
+  .eyebrow-tag{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px 4px 8px;border-radius:20px;margin-bottom:14px;}
+  .eyebrow-tag .dot{width:7px;height:7px;border-radius:50%;}
+  .section-head h2{font-size:25px;font-weight:800;margin:0 0 10px;letter-spacing:-.01em;}
+  .section-head .lead{font-size:15.5px;color:var(--text-dim);max-width:64ch;margin:0;}
+
+  /* tier tinting */
+  .tag-orders .eyebrow-tag{background:var(--accent-bg);color:var(--accent-strong);}
+  .tag-orders .dot{background:var(--accent);}
+  .tag-branch .eyebrow-tag{background:var(--mid-bg);color:var(--mid);}
+  .tag-branch .dot{background:var(--mid);}
+  .tag-exec .eyebrow-tag{background:var(--field-bg);color:var(--field);}
+  .tag-exec .dot{background:var(--field);}
+
+  /* link card */
+  .linkcard{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;background:var(--surface-alt);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:30px;}
+  .linkcard .meta{font-size:12px;color:var(--text-dim);margin-bottom:4px;}
+  .linkcard code{font-family:var(--mono);font-size:13.5px;background:none;}
+  .linkcard a.go{font-weight:700;font-size:13.5px;padding:9px 16px;border-radius:7px;color:#fff;text-decoration:none;white-space:nowrap;}
+  .tag-orders .linkcard a.go{background:var(--accent-strong);}
+  .tag-branch .linkcard a.go{background:var(--mid);}
+  .tag-exec .linkcard a.go{background:var(--field);}
+
+  /* steps */
+  ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0;counter-reset:step;}
+  ol.steps li{counter-increment:step;display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-top:1px solid var(--line);}
+  ol.steps li:first-child{border-top:none;padding-top:0;}
+  ol.steps li::before{content:counter(step);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;}
+  .tag-orders ol.steps li::before{background:var(--accent-strong);}
+  .tag-branch ol.steps li::before{background:var(--mid);}
+  .tag-exec ol.steps li::before{background:var(--field);}
+  ol.steps .step-title{font-weight:700;font-size:15px;margin:0 0 3px;}
+  ol.steps .step-body{font-size:14.5px;color:var(--text-dim);margin:0;}
+  ol.steps .step-body code{font-family:var(--mono);font-size:.92em;background:var(--surface-alt);padding:1px 5px;border-radius:4px;border:1px solid var(--line);}
+
+  /* tables */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--surface);}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);background:var(--surface-alt);}
+  tr:last-child td{border-bottom:none;}
+  td code, td .ex{font-family:var(--mono);font-size:12.5px;color:var(--text-dim);}
+
+  /* callout */
+  .callout{display:flex;gap:12px;background:var(--warn-bg);border:1px solid color-mix(in srgb, var(--warn) 35%, transparent);border-radius:10px;padding:16px 18px;margin-top:26px;}
+  .callout .mark{flex:none;width:22px;height:22px;border-radius:50%;background:var(--warn);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+  .callout .body{font-size:14px;color:var(--text);}
+  .callout .body strong{display:block;margin-bottom:3px;}
+
+  /* flow diagram */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin:26px 0 8px;}
+  .flow-box{flex:1 1 200px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 16px;min-width:180px;}
+  .flow-box .tier-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px;}
+  .flow-box h4{margin:0 0 6px;font-size:14.5px;font-weight:800;}
+  .flow-box p{margin:0;font-size:12.5px;color:var(--text-dim);}
+  .flow-arrow{flex:0 0 64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:10.5px;color:var(--text-dim);padding:0 6px;text-align:center;}
+  .flow-arrow span{white-space:nowrap;}
+  @media (max-width:680px){
+    .flow{flex-direction:column;}
+    .flow-arrow{flex-direction:row;padding:6px 0;}
+  }
+
+  .featgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:24px;}
+  .feat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .feat h4{margin:0 0 6px;font-size:14px;font-weight:700;}
+  .feat p{margin:0;font-size:13px;color:var(--text-dim);}
+
+  .allgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:20px;}
+  .allgrid a{display:block;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:13px 14px;text-decoration:none;color:var(--text);}
+  .allgrid a .l1{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);margin-bottom:4px;}
+  .allgrid a .l2{font-size:13.5px;font-weight:700;}
+  .allgrid a:hover{border-color:var(--accent);}
+
+  footer{padding:32px 0 60px;}
+  footer p{font-size:12.5px;color:var(--text-dim);margin:0;}
+  footer a{color:var(--accent);text-decoration:none;font-weight:600;}
+</style>
+</head>
+<body>
+
+
+<div class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">운영 메뉴얼 · 2026-08-13</div>
+    <h1>통합업무지시 솔루션</h1>
+    <p class="lead">본부 · 중간관리부서 · 수행부서 3단계가 하나의 화면에서 업무지시를 내리고, 확인하고, 모니터링하는 통합 플랫폼입니다. 아래에서 본인의 역할에 맞는 사용법을 확인하세요.</p>
+    <div class="quicklinks">
+      <a class="qlink" href="https://heebonpark.github.io/task-order-solution/?v=orders" target="_blank" rel="noopener"><span class="dot" style="background:#e0923f"></span>업무지시 바로가기</a>
+      <a class="qlink" href="https://heebonpark.github.io/task-order-solution/?v=branch" target="_blank" rel="noopener"><span class="dot" style="background:#dba15a"></span>중간모니터링 바로가기</a>
+      <a class="qlink" href="https://heebonpark.github.io/task-order-solution/?v=exec" target="_blank" rel="noopener"><span class="dot" style="background:#7fa2e0"></span>현장수행 바로가기</a>
+    </div>
+  </div>
+</div>
+
+<nav class="toc">
+  <div class="wrap">
+    <a href="#intro">프로그램 소개</a>
+    <a href="#orders">업무지시</a>
+    <a href="#branch">중간모니터링</a>
+    <a href="#exec">현장수행</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+
+    <section id="intro">
+      <div class="section-head">
+        <h2>프로그램 소개</h2>
+        <p class="lead">영업 · 고객 · 행정 · 인사 4개 업무 영역, 8개 지사(중앙 · 강북 · 서대문 · 고양 · 의정부 · 남양주 · 강릉 · 원주(춘천))를 대상으로 지시 등록부터 현장 수행, 모니터링, 평가 · 보상까지 하나로 연결합니다.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-box">
+          <h4><span class="tier-dot" style="background:var(--hq)"></span>본부</h4>
+          <p>본부장 · 사업지원팀장 · 담당자 — 전 지사 현황을 모니터링하고 업무지시를 등록합니다.</p>
+        </div>
+        <div class="flow-arrow"><span>지시 하달 ⟶</span><span>⟵ 실적 · 현황 보고</span></div>
+        <div class="flow-box">
+          <h4><span class="tier-dot" style="background:var(--mid)"></span>중간관리부서</h4>
+          <p>지사장 · 영업팀장 · 고객팀장 · 지사내근 — 소속 지사 현황을 모니터링하고 업무지시를 등록합니다.</p>
+        </div>
+        <div class="flow-arrow"><span>지시 하달 ⟶</span><span>⟵ 진척률 · 완료 보고</span></div>
+        <div class="flow-box">
+          <h4><span class="tier-dot" style="background:var(--field)"></span>수행부서</h4>
+          <p>SP 영업담당 · SE 기술담당 · SG 출동담당 — 본인에게 배정된 업무를 확인·수행하고, 현장에서 발견한 새 업무를 직접 등록할 수도 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="featgrid">
+        <div class="feat"><h4>대시보드</h4><p>지사별 진척도, 대구분(영업/고객/행정/인사)별 지시 현황을 한눈에 확인합니다.</p></div>
+        <div class="feat"><h4>인사이트 · 개선 제안</h4><p>중간관리자 · 본부 전용. 분야별 지시 분포와 지연율 · 완료율, 지사 과부하 · 결원을 자동 분석해 개선 제안을 보여줍니다. 데이터가 바뀌면 즉시 다시 계산됩니다.</p></div>
+        <div class="feat"><h4>업무지시</h4><p>대구분 · 지시본부 · 우선순위 · 대상직급 · 대상지사 · 마감일을 지정해 지시를 등록합니다.</p></div>
+        <div class="feat"><h4>내 업무</h4><p>수행부서 전용 화면. 본인 지사 · 역할 기준으로 배정된 지시만 카드로 표시되고, 조치결과 · 사진 · 첨부파일을 그 자리에서 등록하며, 새 지시는 배지로 알려줍니다.</p></div>
+        <div class="feat"><h4>평가 · 보상</h4><p>기한 내 완료 +40pt · 진척률 100% +30pt · 지연 1일당 −10pt, 우선순위에 따라 가중치가 적용됩니다.</p></div>
+        <div class="feat"><h4>수행자 관리</h4><p>중간관리자가 본인 지사의 SP · SE · SG 인원을 등록 · 삭제합니다.</p></div>
+        <div class="feat"><h4>결원현황</h4><p>지사별 정원 · 현원 · 육아휴직 · 퇴사 인원과 업무 재배분 필요 여부를 표시합니다.</p></div>
+        <div class="feat"><h4>역할 전환</h4><p>화면 상단에서 담당지사와 역할을 바꾸면, 로그인 없이 해당 시점의 화면으로 즉시 전환됩니다.</p></div>
+        <div class="feat"><h4>관리자 모드</h4><p>비밀번호로 전 지사 · 전 권한 화면으로 전환해 지시를 수정 · 삭제하고 모든 지사의 수행자를 관리합니다.</p></div>
+      </div>
+
+      <div class="callout">
+        <div class="mark">!</div>
+        <div class="body">
+          <strong>현재 버전의 특성</strong>
+          서버 없이 화면(브라우저)에서만 동작하는 프론트엔드 데모입니다. 등록한 지시나 진척률은 그 화면을 새로고침하면 초기화되고, 다른 사람의 화면과 실시간으로 공유되지 않습니다. 실제 운영에 쓰려면 서버 저장소와 로그인 연동이 추가로 필요합니다.
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="mark">!</div>
+        <div class="body">
+          <strong>관리자 모드는 실제 보안 장치가 아닙니다</strong>
+          상단 "관리자" 비밀번호는 화면(브라우저) 안에서만 검사되는 편의 잠금입니다. 페이지 소스를 열면 비밀번호가 그대로 노출되므로, 실제 접근 통제가 필요하면 서버 인증을 별도로 구축해야 합니다. 비밀번호는 담당자에게 별도로 전달받으세요.
+        </div>
+      </div>
+
+      <p style="font-size:13px;color:var(--text-dim);margin-top:28px;margin-bottom:8px;font-weight:600;">전체 접속 링크</p>
+      <div class="allgrid">
+        <a href="https://heebonpark.github.io/task-order-solution/?v=orders" target="_blank" rel="noopener"><div class="l1">업무지시</div><div class="l2">중간관리부서 · 본부</div></a>
+        <a href="https://heebonpark.github.io/task-order-solution/?v=branch" target="_blank" rel="noopener"><div class="l1">중간모니터링</div><div class="l2">지사장 등 중간관리자</div></a>
+        <a href="https://heebonpark.github.io/task-order-solution/?v=monitor" target="_blank" rel="noopener"><div class="l1">본부 모니터링</div><div class="l2">전 지사 전체 조회</div></a>
+        <a href="https://heebonpark.github.io/task-order-solution/?v=exec" target="_blank" rel="noopener"><div class="l1">현장수행</div><div class="l2">SP · SE · SG</div></a>
+      </div>
+    </section>
+
+    <section id="orders" class="tag-orders">
+      <div class="section-head">
+        <div class="eyebrow-tag"><span class="dot"></span>매뉴얼 · 업무지시</div>
+        <h2>업무지시 등록 · 관리</h2>
+        <p class="lead">중간관리부서, 본부는 물론 현장 수행부서(SP·SE·SG)도 사용할 수 있습니다. 누구든 새 지시를 등록할 수 있고, 등록된 목록의 진행 상태를 확인합니다.</p>
+      </div>
+
+      <div class="linkcard">
+        <div>
+          <div class="meta">접속 링크 · 기본 역할 담당자(본부)</div>
+          <code>?v=orders</code>
+        </div>
+        <a class="go" href="https://heebonpark.github.io/task-order-solution/?v=orders" target="_blank" rel="noopener">업무지시 화면 열기 ⟶</a>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <div></div>
+          <div><p class="step-title">역할 확인</p><p class="step-body">화면 상단 담당지사 · 역할에서 본인 역할을 선택합니다. 중간관리부서 · 본부 역할은 물론, SP · SE · SG 현장 역할에서도 <code>업무지시</code> 탭이 보입니다 — 현장에서 발견한 새 업무를 직접 등록할 때 사용하세요.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">분류 선택</p><p class="step-body"><code>대구분</code>(영업 · 고객 · 행정 · 인사)을 고르면 <code>소구분</code> 목록이 자동으로 바뀝니다. 이어서 <code>지시본부</code>와 <code>우선순위</code>(일반 · 긴급 · 매우긴급)를 지정합니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">제목 · 마감일 입력</p><p class="step-body">지시 제목과 마감일을 입력합니다. 마감일이 지나도 완료되지 않은 지시는 자동으로 <code>지연</code> 상태가 됩니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">받는 사람 지정</p><p class="step-body"><code>대상 직급</code>에서 이 지시를 받을 역할을 고릅니다. <code>전체</code>를 선택하면 대상 지사의 모든 역할에게 노출됩니다. 특정 역할(예: SP)을 고르면 그 역할의 <code>내 업무</code> 화면에만 나타납니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">대상 지사 선택</p><p class="step-body">칩을 눌러 지사를 복수 선택합니다. 이미 진행중 지시가 4건 이상인 지사를 고르면 <span style="color:var(--warn);font-weight:700;">⚠ 과부하 주의</span> 경고가 표시됩니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">등록</p><p class="step-body"><code>지시 등록</code>을 누르면 <code>대기</code> 상태로 목록에 즉시 반영되고, 대상자의 <code>내 업무</code> 탭에 미확인 배지가 뜹니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">목록 확인</p><p class="step-body">아래 <code>업무지시 목록</code>에서 대구분 필터 칩으로 좁혀보고, 지사별 진척률과 상태(대기 · 진행중 · 완료 · 지연 · 기타)를 확인합니다. 현장에서 등록한 특이사항 · 사진 개수도 제목 아래에 함께 표시됩니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">지시 수정 · 삭제 (관리자 전용)</p><p class="step-body">관리자 모드에서만 목록 맨 오른쪽에 <code>수정</code> · <code>삭제</code> 버튼이 나타납니다. <code>수정</code>을 누르면 위 등록 폼에 해당 지시 내용이 채워지고, 버튼이 <code>지시 수정 저장</code>으로 바뀝니다.</p></div>
+        </li>
+      </ol>
+
+      <p style="font-size:13px;color:var(--text-dim);margin:34px 0 10px;font-weight:600;">등록 항목 설명</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>항목</th><th>설명</th><th>예시</th></tr></thead>
+          <tbody>
+            <tr><td>대구분</td><td>업무 대분류</td><td class="ex">영업 · 고객 · 행정 · 인사</td></tr>
+            <tr><td>소구분</td><td>대구분별 세부 유형</td><td class="ex">(영업) 신규 · 유지 · 일반</td></tr>
+            <tr><td>우선순위</td><td>처리 시급도. 완료 시 보상 포인트 가중치에 반영</td><td class="ex">일반 / 긴급(×1.5) / 매우긴급(×2)</td></tr>
+            <tr><td>대상 직급</td><td>지시를 받는 역할. 전체는 모든 역할에 노출</td><td class="ex">SP · SE · SG · 지사장 … · 전체</td></tr>
+            <tr><td>대상 지사</td><td>지시를 받는 지사(복수 선택)</td><td class="ex">중앙, 강북, 서대문 …</td></tr>
+            <tr><td>마감일</td><td>처리 기한. 경과 시 자동 지연 처리</td><td class="ex">2026-08-30</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="branch" class="tag-branch">
+      <div class="section-head">
+        <div class="eyebrow-tag"><span class="dot"></span>매뉴얼 · 중간모니터링</div>
+        <h2>중간관리부서 모니터링</h2>
+        <p class="lead">지사장 · 영업팀장 · 고객팀장 · 지사내근이 사용합니다. 대시보드 · 업무지시 · 수행자 관리 · 결원현황 모두 본인 지사 범위로만 집계됩니다.</p>
+      </div>
+
+      <div class="linkcard">
+        <div>
+          <div class="meta">접속 링크 · 기본 역할 지사장</div>
+          <code>?v=branch</code>
+        </div>
+        <a class="go" href="https://heebonpark.github.io/task-order-solution/?v=branch" target="_blank" rel="noopener">중간모니터링 화면 열기 ⟶</a>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <div></div>
+          <div><p class="step-title">본인 지사 · 역할 지정</p><p class="step-body">진입 직후 상단 <code>담당지사</code>를 본인 소속 지사로, <code>역할</code>을 지사장 · 영업팀장 · 고객팀장 · 지사내근 중 하나로 바꿉니다. 우측 안내 문구로 현재 보고 있는 범위를 항상 확인할 수 있습니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">KPI 확인</p><p class="step-body">전체 지시 · 완료 · 지연 지시 · 평균 진척률 4개 카드가 <strong>본인 지사 기준으로만</strong> 집계됩니다. 다른 지사 수치는 섞이지 않습니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">지사별 업무 진척도</p><p class="step-body">본인 지사 카드 1개가 표시됩니다. 진행중 지시가 4건 이상이면 <code>과부하</code> 배지가 붙습니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">대구분별 지시 현황</p><p class="step-body">본인 지사에 걸린 지시만 영업 · 고객 · 행정 · 인사로 집계된 표를 확인합니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">인사이트 확인</p><p class="step-body"><code>인사이트</code> 탭에서 본인 지사 기준으로 어느 분야에 지시가 몰려 있는지, 지연율 · 완료율이 낮은 분야가 있는지, 과부하 · 결원 이슈가 있는지를 자동으로 계산된 카드로 확인합니다. 주의가 필요한 항목이 있으면 탭 옆에 배지 숫자가 뜨고, 새 지시가 등록되거나 진척률이 바뀌면 다시 계산됩니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">업무지시 등록 · 하달</p><p class="step-body"><code>업무지시</code> 탭에서 소속 SP · SE · SG에게 새 지시를 등록할 수 있습니다. 등록 방법은 <a href="#orders" style="color:var(--mid);">업무지시 매뉴얼</a>과 동일합니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">수행자 관리</p><p class="step-body"><code>수행자 관리</code> 탭에서 본인 지사의 SP · SE · SG 인원을 확인합니다. 이름과 역할을 입력하고 <code>추가</code>를 누르면 본인 지사로 즉시 등록되고, 각 행의 <code>삭제</code>로 인원을 뺄 수 있습니다. 다른 지사 인원은 보이지 않습니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">결원현황 확인</p><p class="step-body"><code>결원현황</code> 탭에서 본인 지사의 정원 · 현원 · 육아휴직 · 퇴사와 <code>재배분 필요</code> 여부만 표시됩니다.</p></div>
+        </li>
+      </ol>
+    </section>
+
+    <section id="exec" class="tag-exec">
+      <div class="section-head">
+        <div class="eyebrow-tag"><span class="dot"></span>매뉴얼 · 현장수행</div>
+        <h2>현장수행 담당자 (SP · SE · SG)</h2>
+        <p class="lead">SP 영업담당 · SE 기술담당 · SG 출동담당이 사용합니다. 본인에게 배정된 업무를 확인해 그 자리에서 진척률을 등록하고, 지시를 받기 전이라도 현장에서 발견한 업무를 직접 등록할 수 있습니다.</p>
+      </div>
+
+      <div class="linkcard">
+        <div>
+          <div class="meta">접속 링크 · 기본 역할 SP</div>
+          <code>?v=exec&amp;r=역할&amp;b=지사</code>
+        </div>
+        <a class="go" href="https://heebonpark.github.io/task-order-solution/?v=exec" target="_blank" rel="noopener">현장수행 화면 열기 ⟶</a>
+      </div>
+
+      <ol class="steps">
+        <li>
+          <div></div>
+          <div><p class="step-title">담당지사 · 역할 선택</p><p class="step-body">진입하면 바로 <code>내 업무</code> 탭이 열립니다. 상단에서 본인 <code>담당지사</code>와 역할(SP 영업담당 · SE 기술담당 · SG 출동담당)을 고릅니다. 링크에 <code>&r=SE&b=강릉</code>처럼 붙이면 앱을 열 때부터 바로 그 조합으로 진입합니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">배정된 업무 확인</p><p class="step-body">본인 지사 · 역할로 지정되었거나 대상이 <code>전체</code>인 지시만 표에 나타납니다. 다른 지사, 다른 역할의 지시는 보이지 않습니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">현장에서 새 업무 직접 등록</p><p class="step-body">지시를 받기 전이라도 현장에서 발견한 업무가 있으면 <code>업무지시</code> 탭에서 직접 등록할 수 있습니다. 등록 방법은 <a href="#orders" style="color:var(--field);">업무지시 매뉴얼</a>과 동일합니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">조치결과 선택</p><p class="step-body">각 업무 카드에서 <code>조치결과</code>를 진행중 · 완료 · 기타 중에서 고릅니다. <code>진행중</code>을 고르면 진척률 슬라이더가 나타나 세부 % 를 조정할 수 있고, <code>완료</code>는 자동으로 100%가 됩니다. <code>기타</code>는 지연 · 보류 등 예외 상황을 기록할 때 사용합니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">특이사항 · 증빙 첨부</p><p class="step-body"><code>특이사항</code>에 현장 메모를 남기고(조치결과가 <code>기타</code>면 필수), <code>📷 사진 추가</code>로 현장 사진을 바로 촬영하거나 <code>📎 파일 첨부</code>로 문서를 첨부합니다. 잘못 추가한 항목은 각 썸네일 · 칩의 × 로 지울 수 있습니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">수행 등록</p><p class="step-body"><code>수행 등록</code> 버튼을 눌러야 조치결과 · 특이사항 · 사진 · 첨부파일이 실제로 저장됩니다. 저장된 내용은 중간관리자 · 본부의 <code>업무지시 목록</code>에도 함께 노출됩니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">새 지시 알림</p><p class="step-body">다른 탭을 보고 있는 동안 새로 배정된 지시가 생기면 <code>내 업무</code> 탭 옆에 빨간 숫자 배지가 뜹니다. 탭을 열면 그 시점 배정 건이 모두 확인 처리되어 배지가 사라집니다.</p></div>
+        </li>
+        <li>
+          <div></div>
+          <div><p class="step-title">평가 · 보상 확인</p><p class="step-body"><code>평가/보상</code> 탭에서 본인이 수행한 지시들의 포인트(기한 내 완료 +40pt · 진척률 100% +30pt · 지연 1일당 −10pt, 긴급 ×1.5 · 매우긴급 ×2)를 확인합니다.</p></div>
+        </li>
+      </ol>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>배포 · 소스: <a href="https://github.com/heebonpark/task-order-solution" target="_blank" rel="noopener">github.com/heebonpark/task-order-solution</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
