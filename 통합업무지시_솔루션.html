@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>통합업무지시 솔루션</title>
+<style>
+  :root{
+    --ink:#1c2321; --paper:#f6f4ee; --line:#dcd7c8;
+    --navy:#233045; --navy2:#334463; --accent:#b5651d; --accent2:#8a9a5b;
+    --danger:#a63a3a; --ok:#4c7a4c; --wait:#9c8c3c;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Pretendard','Malgun Gothic',-apple-system,sans-serif;background:var(--paper);color:var(--ink);}
+  header{background:var(--navy);color:#fff;padding:20px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  header h1{margin:0;font-size:20px;letter-spacing:.5px;}
+  header .sub{font-size:12px;opacity:.7;margin-top:3px;}
+  nav{display:flex;gap:4px;background:var(--navy2);padding:0 24px;flex-wrap:wrap;}
+  nav button{background:none;border:none;color:#dbe1ea;padding:12px 16px;font-size:13.5px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600;}
+  nav button.active{color:#fff;border-bottom:3px solid var(--accent);}
+  main{padding:22px 28px 60px;max-width:1280px;margin:0 auto;}
+  .grid{display:grid;gap:14px;}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .kpi .n{font-size:26px;font-weight:800;color:var(--navy);}
+  .kpi .l{font-size:12px;color:#777;margin-top:2px;}
+  .kpi.warn .n{color:var(--danger);}
+  section{display:none;}
+  section.active{display:block;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;}
+  .panel h2{margin:0 0 14px;font-size:16px;color:var(--navy);border-left:4px solid var(--accent);padding-left:10px;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  label{font-size:12px;color:#666;display:block;margin-bottom:4px;}
+  select,input[type=text],input[type=date]{padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff;min-width:130px;}
+  .field{flex:1;min-width:140px;}
+  button.primary{background:var(--navy);color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13.5px;}
+  button.primary:hover{background:var(--navy2);}
+  button.chip{border:1px solid var(--line);background:#fff;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;}
+  button.chip.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);}
+  th{color:#777;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px;}
+  .tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;color:#fff;}
+  .tag.영업{background:var(--accent);} .tag.고객{background:#4a6fa5;} .tag.행정{background:var(--accent2);} .tag.인사{background:#7a5c9e;}
+  .status{font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;}
+  .status.진행중{background:#fff2d6;color:var(--wait);} .status.완료{background:#e3f0e3;color:var(--ok);}
+  .status.대기{background:#eee;color:#888;} .status.지연{background:#fbe3e3;color:var(--danger);}
+  .bar-outer{background:#eee;border-radius:6px;height:8px;width:100%;overflow:hidden;}
+  .bar-inner{height:100%;background:var(--navy);}
+  .bar-inner.high{background:var(--danger);}
+  .branch-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
+  .branch-card{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fdfcf8;}
+  .branch-card h4{margin:0 0 6px;font-size:13.5px;color:var(--navy);}
+  .branch-card .load{font-size:11px;color:#777;margin-top:6px;}
+  .reward{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);}
+  .reward:last-child{border-bottom:none;}
+  .reward .pts{font-weight:800;color:var(--accent);}
+  small.hint{color:#888;font-size:11.5px;}
+  .vacancy-badge{font-size:11px;padding:2px 8px;border-radius:10px;background:#fdeaea;color:var(--danger);font-weight:700;}
+  .scopebar{display:flex;gap:16px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;}
+  .scope-desc{font-size:12px;color:#666;flex:1;min-width:220px;align-self:center;}
+  .scope-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-right:6px;}
+  .scope-tag.field{background:#eaf1fb;color:#2e5aa8;}
+  .scope-tag.mid{background:#fdf1e0;color:#a66a1e;}
+  .scope-tag.hq{background:#eef3e6;color:#5c7a3c;}
+  .empty-row{text-align:center;color:#999;padding:20px;}
+  .nav-badge{display:inline-block;min-width:16px;height:16px;line-height:16px;padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;font-size:10px;font-weight:800;margin-left:6px;text-align:center;vertical-align:2px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>통합업무지시 솔루션</h1>
+    <div class="sub">영업 · 고객 · 행정 · 인사 — 8개 지사 통합 업무지시/모니터링/평가보상 플랫폼</div>
+  </div>
+  <div class="sub">강북/강원사업지원팀 · 2026-08-13</div>
+</header>
+
+<nav id="nav"></nav>
+
+<main>
+  <div class="scopebar">
+    <div class="field" style="max-width:170px;">
+      <label>담당지사</label>
+      <select id="scope-branch"></select>
+    </div>
+    <div class="field" style="max-width:220px;">
+      <label>역할</label>
+      <select id="scope-role"></select>
+    </div>
+    <div class="scope-desc" id="scopeDesc"></div>
+  </div>
+
+  <div class="grid kpis" id="kpiRow"></div>
+
+  <section id="sec-mine">
+    <div class="panel">
+      <h2>내 업무 <small class="hint" style="font-weight:400;">— 담당지사 · 역할 기준으로 본인에게 배정된 지시만 표시됩니다</small></h2>
+      <table>
+        <thead><tr><th>구분</th><th>제목</th><th>지시본부</th><th>마감</th><th>진척률</th><th>상태</th><th>수행 등록</th></tr></thead>
+        <tbody id="mineTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="sec-dashboard">
+    <div class="panel">
+      <h2>지사별 업무 진척도</h2>
+      <div class="grid branch-grid" id="branchGrid"></div>
+    </div>
+    <div class="panel">
+      <h2>대구분별 지시 현황</h2>
+      <table><thead><tr><th>구분</th><th>진행 중</th><th>완료</th><th>지연</th><th>평균 진척률</th></tr></thead>
+      <tbody id="catSummary"></tbody></table>
+    </div>
+  </section>
+
+  <section id="sec-orders">
+    <div class="panel">
+      <h2>새 업무지시 등록</h2>
+      <div class="row">
+        <div class="field"><label>대구분</label><select id="f-major"></select></div>
+        <div class="field"><label>소구분</label><select id="f-minor"></select></div>
+        <div class="field"><label>지시본부</label>
+          <select id="f-org"><option>마케팅본부</option><option>고객서비스본부</option><option>영업본부</option><option>인사총무본부</option></select>
+        </div>
+        <div class="field"><label>우선순위</label>
+          <select id="f-pri"><option>일반</option><option>긴급</option><option>매우긴급</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2;"><label>지시 제목</label><input type="text" id="f-title" placeholder="예: 8월 설비징수율 특별점검 결과 보고"></div>
+        <div class="field"><label>마감일</label><input type="date" id="f-due"></div>
+        <div class="field"><label>대상 직급</label>
+          <select id="f-role">
+            <option>전체</option>
+            <option>SP</option><option>SE</option><option>SG</option>
+            <option>지사장</option><option>영업팀장</option><option>고객팀장</option><option>지사내근</option>
+            <option>본부장</option><option>사업지원팀장</option><option>담당자</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div style="flex:1;">
+          <label>대상 지사 (복수 선택)</label>
+          <div class="row" id="branchChips"></div>
+        </div>
+      </div>
+      <button class="primary" onclick="createOrder()">지시 등록</button>
+      <span id="overloadWarn" style="color:var(--danger);font-size:12px;margin-left:12px;"></span>
+    </div>
+
+    <div class="panel">
+      <h2>업무지시 목록</h2>
+      <div class="row" id="filterChips"></div>
+      <table>
+        <thead><tr><th>구분</th><th>제목</th><th>지시본부</th><th>대상</th><th>마감</th><th>진척률</th><th>상태</th></tr></thead>
+        <tbody id="orderTable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="sec-reward">
+    <div class="panel">
+      <h2>평가 · 보상 체계</h2>
+      <small class="hint">완료 시점 기준 자동 산출: 기한 內 완료 +40pt · 진척률 100% +30pt · 지연 1일당 -10pt · 우선순위 가중치 x1.5(긴급)</small>
+      <div style="margin-top:14px;" id="rewardList"></div>
+    </div>
+  </section>
+
+  <section id="sec-hr">
+    <div class="panel">
+      <h2>지사별 결원 현황</h2>
+      <table><thead><tr><th>지사</th><th>정원</th><th>현원</th><th>육아휴직</th><th>퇴사(결원)</th><th>업무 재배분 상태</th></tr></thead>
+      <tbody id="hrTable"></tbody></table>
+    </div>
+  </section>
+</main>
+
+<script>
+const branches = ["중앙","강북","서대문","고양","의정부","남양주","강릉","원주"];
+const categories = {
+  "영업": ["신규","유지","일반"],
+  "고객": ["금융","일반","긴급"],
+  "행정": ["안전","차량관리","사고관리","일반"],
+  "인사": ["채용","교육","복무","일반"]
+};
+const catColor = {"영업":"영업","고객":"고객","행정":"행정","인사":"인사"};
+
+let orders = [
+  {id:1, major:"행정", minor:"안전", title:"8월 여름철 이륜차 안전점검 결과 제출", org:"고객서비스본부", branches:["중앙","강북","서대문"], role:"SE", due:"2026-08-20", priority:"긴급", progress:80, status:"진행중"},
+  {id:2, major:"영업", minor:"유지", title:"9월 유지영업 목표 재산정 보고", org:"영업본부", branches:["고양","의정부","남양주"], role:"영업팀장", due:"2026-08-25", priority:"일반", progress:45, status:"진행중"},
+  {id:3, major:"고객", minor:"금융", title:"설변징수율 미납 고객 리스트 회신", org:"고객서비스본부", branches:branches.slice(), role:"고객팀장", due:"2026-08-15", priority:"매우긴급", progress:100, status:"완료"},
+  {id:4, major:"인사", minor:"복무", title:"하반기 육아휴직 신청 현황 취합", org:"인사총무본부", branches:["강릉","원주"], role:"전체", due:"2026-08-10", priority:"일반", progress:60, status:"지연"},
+  {id:5, major:"행정", minor:"차량관리", title:"업무차량 정기점검 이행 확인", org:"고객서비스본부", branches:branches.slice(), role:"SG", due:"2026-08-30", priority:"일반", progress:20, status:"대기"},
+  {id:6, major:"영업", minor:"신규", title:"9월 신규가입 프로모션 현장 안내 실시", org:"영업본부", branches:["중앙","강북"], role:"SP", due:"2026-08-22", priority:"일반", progress:35, status:"진행중"},
+];
+let nextId = 7;
+let activeFilter = "전체";
+
+const branchLoad = {}; branches.forEach(b=>branchLoad[b]=0);
+
+function recalcLoad(){
+  branches.forEach(b=>branchLoad[b]=0);
+  orders.forEach(o=>{ if(o.status!=="완료") o.branches.forEach(b=>branchLoad[b]++); });
+}
+
+const hr = {
+  "중앙":{quota:12,current:11,leave:1,resigned:0},
+  "강북":{quota:10,current:9,leave:0,resigned:1},
+  "서대문":{quota:9,current:9,leave:0,resigned:0},
+  "고양":{quota:11,current:10,leave:1,resigned:0},
+  "의정부":{quota:8,current:6,leave:1,resigned:1},
+  "남양주":{quota:9,current:8,leave:0,resigned:1},
+  "강릉":{quota:7,current:7,leave:0,resigned:0},
+  "원주":{quota:7,current:5,leave:1,resigned:1},
+};
+
+// ROLE / SCOPE
+const roleMeta = {
+  "SP": {label:"SP · 영업담당", tier:"field"},
+  "SE": {label:"SE · 기술담당", tier:"field"},
+  "SG": {label:"SG · 출동담당", tier:"field"},
+  "지사장": {label:"지사장", tier:"mid"},
+  "영업팀장": {label:"영업팀장", tier:"mid"},
+  "고객팀장": {label:"고객팀장", tier:"mid"},
+  "지사내근": {label:"지사내근", tier:"mid"},
+  "본부장": {label:"본부장", tier:"hq"},
+  "사업지원팀장": {label:"사업지원팀장", tier:"hq"},
+  "담당자": {label:"담당자(본부)", tier:"hq"},
+};
+const tierLabel = {field:"수행부서", mid:"중간관리부서", hq:"본부"};
+const tabsByTier = {
+  field: [["mine","내 업무"],["reward","평가/보상"]],
+  mid:   [["dashboard","대시보드"],["orders","업무지시"],["reward","평가/보상"],["hr","결원현황"]],
+  hq:    [["dashboard","대시보드"],["orders","업무지시"],["reward","평가/보상"],["hr","결원현황"]],
+};
+let scope = { branch: branches[0], role: "담당자" };
+let currentSectionId = null;
+const seenKeys = new Set();
+function scopeKey(o){ return `${scope.role}|${scope.branch}|${o.id}`; }
+function unseenMineCount(){
+  if(roleMeta[scope.role].tier !== "field") return 0;
+  return getScopedOrders().filter(o=>!seenKeys.has(scopeKey(o))).length;
+}
+
+const scopeBranchSel = document.getElementById("scope-branch");
+branches.forEach(b=>{ const o=document.createElement("option"); o.value=b; o.textContent=b+"지사"; scopeBranchSel.appendChild(o); });
+scopeBranchSel.value = scope.branch;
+scopeBranchSel.onchange = e=>{ scope.branch = e.target.value; render(); };
+
+const scopeRoleSel = document.getElementById("scope-role");
+[["수행부서 (현장)",["SP","SE","SG"]],["중간관리부서",["지사장","영업팀장","고객팀장","지사내근"]],["본부",["본부장","사업지원팀장","담당자"]]]
+  .forEach(([label, roles])=>{
+    const og = document.createElement("optgroup"); og.label = label;
+    roles.forEach(r=>{ const o=document.createElement("option"); o.value=r; o.textContent=roleMeta[r].label; og.appendChild(o); });
+    scopeRoleSel.appendChild(og);
+  });
+scopeRoleSel.value = scope.role;
+scopeRoleSel.onchange = e=>{ scope.role = e.target.value; buildNav(); };
+
+// URL-based entry points: ?v=orders|monitor|exec  (+ optional r=역할, b=지사)
+const linkPresets = {
+  orders:  { role:"담당자",  section:"orders"    },
+  monitor: { role:"본부장",  section:"dashboard" },
+  exec:    { role:"SP",     section:"mine"      },
+};
+const urlParams = new URLSearchParams(location.search);
+const preset = linkPresets[urlParams.get("v")];
+if(preset){
+  scope.role = urlParams.get("r") || preset.role;
+  currentSectionId = preset.section;
+}
+if(urlParams.get("b") && branches.includes(urlParams.get("b"))) scope.branch = urlParams.get("b");
+scopeBranchSel.value = scope.branch;
+scopeRoleSel.value = scope.role;
+
+function getScopedOrders(){
+  const tier = roleMeta[scope.role].tier;
+  if(tier==="hq") return orders;
+  if(tier==="mid") return orders.filter(o=>o.branches.includes(scope.branch));
+  return orders.filter(o=>o.branches.includes(scope.branch) && (o.role==="전체" || o.role===scope.role));
+}
+
+function updateScopeDesc(){
+  const tier = roleMeta[scope.role].tier;
+  const branchTxt = tier==="hq" ? "전체 지사" : `${scope.branch}지사`;
+  document.getElementById("scopeDesc").innerHTML =
+    `<span class="scope-tag ${tier}">${tierLabel[tier]}</span> ${branchTxt} · ${roleMeta[scope.role].label} 로 보는 화면입니다.`;
+  scopeBranchSel.closest(".field").style.display = tier==="hq" ? "none" : "";
+}
+
+// NAV
+const nav = document.getElementById("nav");
+function buildNav(){
+  const tier = roleMeta[scope.role].tier;
+  const tabs = tabsByTier[tier];
+  if(!tabs.some(([id])=>id===currentSectionId)) currentSectionId = tabs[0][0];
+  nav.innerHTML = "";
+  tabs.forEach(([id,label])=>{
+    const b = document.createElement("button");
+    b.dataset.id = id;
+    b.dataset.label = label;
+    b.onclick = ()=>showSection(id);
+    nav.appendChild(b);
+  });
+  showSection(currentSectionId);
+}
+function showSection(id){
+  currentSectionId = id;
+  document.querySelectorAll("main > section").forEach(s=>s.classList.remove("active"));
+  const el = document.getElementById("sec-"+id);
+  if(el) el.classList.add("active");
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active", b.dataset.id===id));
+  if(id==="mine" && roleMeta[scope.role].tier==="field"){
+    getScopedOrders().forEach(o=>seenKeys.add(scopeKey(o)));
+  }
+  render();
+}
+function updateNavBadges(){
+  document.querySelectorAll("#nav button").forEach(b=>{
+    let html = b.dataset.label;
+    if(b.dataset.id==="mine"){
+      const n = unseenMineCount();
+      if(n>0) html += `<span class="nav-badge">${n}</span>`;
+    }
+    b.innerHTML = html;
+  });
+}
+
+// form selects
+const majorSel = document.getElementById("f-major");
+Object.keys(categories).forEach(m=>{
+  const o=document.createElement("option"); o.textContent=m; majorSel.appendChild(o);
+});
+function refreshMinor(){
+  const minorSel = document.getElementById("f-minor");
+  minorSel.innerHTML="";
+  categories[majorSel.value].forEach(m=>{
+    const o=document.createElement("option"); o.textContent=m; minorSel.appendChild(o);
+  });
+}
+majorSel.onchange = refreshMinor;
+refreshMinor();
+
+// branch chips for form
+const branchChips = document.getElementById("branchChips");
+const selectedBranches = new Set();
+branches.forEach(b=>{
+  const c=document.createElement("button"); c.type="button"; c.className="chip"; c.textContent=b;
+  c.onclick=()=>{ c.classList.toggle("on"); selectedBranches.has(b)?selectedBranches.delete(b):selectedBranches.add(b); checkOverload(); };
+  branchChips.appendChild(c);
+});
+function checkOverload(){
+  const warn = document.getElementById("overloadWarn");
+  const overloaded = [...selectedBranches].filter(b=>branchLoad[b]>=4);
+  warn.textContent = overloaded.length ? `⚠ 과부하 주의: ${overloaded.join(", ")} 지사는 현재 진행중 지시 4건 이상 보유` : "";
+}
+
+function createOrder(){
+  const title = document.getElementById("f-title").value.trim();
+  const due = document.getElementById("f-due").value;
+  if(!title || !due || selectedBranches.size===0){ alert("제목, 마감일, 대상 지사를 입력해주세요."); return; }
+  orders.push({
+    id: nextId++, major: majorSel.value, minor: document.getElementById("f-minor").value,
+    title, org: document.getElementById("f-org").value, branches: [...selectedBranches],
+    role: document.getElementById("f-role").value, due, priority: document.getElementById("f-pri").value,
+    progress: 0, status: "대기"
+  });
+  document.getElementById("f-title").value=""; selectedBranches.clear();
+  branchChips.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+  document.getElementById("overloadWarn").textContent="";
+  render();
+}
+
+// filter chips
+const filterChips = document.getElementById("filterChips");
+["전체","영업","고객","행정","인사"].forEach(f=>{
+  const c=document.createElement("button"); c.className="chip"+(f===activeFilter?" on":""); c.textContent=f;
+  c.onclick=()=>{ activeFilter=f; render(); };
+  filterChips.appendChild(c);
+});
+
+function statusClass(s){ return "status "+s; }
+
+const TODAY = "2026-08-13";
+function recomputeStatus(o){
+  if(o.progress>=100) o.status="완료";
+  else if(o.due < TODAY) o.status="지연";
+  else o.status = o.progress>0 ? "진행중" : "대기";
+}
+function updateProgress(id, val){
+  const o = orders.find(x=>x.id===id); if(!o) return;
+  o.progress = Number(val);
+  recomputeStatus(o);
+  render();
+}
+function markDone(id){
+  const o = orders.find(x=>x.id===id); if(!o) return;
+  o.progress = 100;
+  recomputeStatus(o);
+  render();
+}
+
+function render(){
+  recalcLoad();
+  updateScopeDesc();
+  const tier = roleMeta[scope.role].tier;
+  const scoped = getScopedOrders();
+
+  // KPIs
+  const total = scoped.length;
+  const done = scoped.filter(o=>o.status==="완료").length;
+  const delayed = scoped.filter(o=>o.status==="지연").length;
+  const avgProgress = total ? Math.round(scoped.reduce((a,o)=>a+o.progress,0)/total) : 0;
+  const kpiRow = document.getElementById("kpiRow");
+  kpiRow.innerHTML = `
+    <div class="kpi"><div class="n">${total}</div><div class="l">전체 지시</div></div>
+    <div class="kpi"><div class="n">${done}</div><div class="l">완료</div></div>
+    <div class="kpi warn"><div class="n">${delayed}</div><div class="l">지연 지시</div></div>
+    <div class="kpi"><div class="n">${avgProgress}%</div><div class="l">평균 진척률</div></div>`;
+
+  // 내 업무 (field tier)
+  const mineTable = document.getElementById("mineTable");
+  if(mineTable){
+    mineTable.innerHTML = scoped.length ? scoped.map(o=>`
+      <tr>
+        <td><span class="tag ${catColor[o.major]}">${o.major}</span> <small style="color:#888;">${o.minor}</small></td>
+        <td>${o.title}</td>
+        <td>${o.org}</td>
+        <td>${o.due}</td>
+        <td style="min-width:150px;">
+          <input type="range" min="0" max="100" step="5" value="${o.progress}"
+            oninput="this.nextElementSibling.textContent=this.value+'%'"
+            onchange="updateProgress(${o.id}, this.value)" style="width:90px;vertical-align:middle;">
+          <small>${o.progress}%</small>
+        </td>
+        <td><span class="${statusClass(o.status)}">${o.status}</span></td>
+        <td><button class="chip" onclick="markDone(${o.id})">완료 처리</button></td>
+      </tr>`).join("") : `<tr><td colspan="7" class="empty-row">배정된 업무가 없습니다.</td></tr>`;
+  }
+
+  // branch grid (dashboard) — hq: 전체 지사, mid: 본인 지사만
+  const bg = document.getElementById("branchGrid");
+  if(bg){
+    const gridBranches = tier==="hq" ? branches : [scope.branch];
+    bg.innerHTML = gridBranches.map(b=>{
+      const bOrders = orders.filter(o=>o.branches.includes(b));
+      const avg = bOrders.length ? Math.round(bOrders.reduce((a,o)=>a+o.progress,0)/bOrders.length) : 0;
+      const load = branchLoad[b];
+      return `<div class="branch-card">
+        <h4>${b}지사</h4>
+        <div class="bar-outer"><div class="bar-inner ${avg<50?'high':''}" style="width:${avg}%"></div></div>
+        <div class="load">평균 진척률 ${avg}% · 진행중 지시 ${load}건 ${load>=4?'<span class="vacancy-badge">과부하</span>':''}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // category summary (dashboard) — scoped
+  const catSummary = document.getElementById("catSummary");
+  if(catSummary){
+    catSummary.innerHTML = Object.keys(categories).map(m=>{
+      const list = scoped.filter(o=>o.major===m);
+      const prog = list.filter(o=>o.status==="진행중").length;
+      const done2 = list.filter(o=>o.status==="완료").length;
+      const delay = list.filter(o=>o.status==="지연").length;
+      const avg = list.length ? Math.round(list.reduce((a,o)=>a+o.progress,0)/list.length) : 0;
+      return `<tr><td><span class="tag ${catColor[m]}">${m}</span></td><td>${prog}</td><td>${done2}</td><td>${delay}</td><td>${avg}%</td></tr>`;
+    }).join("");
+  }
+
+  // order table (업무지시 목록) — scoped
+  const orderTable = document.getElementById("orderTable");
+  if(orderTable){
+    const filtered = activeFilter==="전체" ? scoped : scoped.filter(o=>o.major===activeFilter);
+    orderTable.innerHTML = filtered.length ? filtered.map(o=>`
+      <tr>
+        <td><span class="tag ${catColor[o.major]}">${o.major}</span> <small style="color:#888;">${o.minor}</small></td>
+        <td>${o.title}</td>
+        <td>${o.org}</td>
+        <td>${o.branches.length===8?'전체 지사':o.branches.join(', ')}<br><small style="color:#999;">${o.role}</small></td>
+        <td>${o.due}</td>
+        <td style="min-width:90px;"><div class="bar-outer"><div class="bar-inner ${o.progress<50?'high':''}" style="width:${o.progress}%"></div></div><small>${o.progress}%</small></td>
+        <td><span class="${statusClass(o.status)}">${o.status}</span></td>
+      </tr>`).join("") : `<tr><td colspan="7" class="empty-row">해당 조건의 지시가 없습니다.</td></tr>`;
+    filterChips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c.textContent===activeFilter));
+  }
+
+  // reward list — scoped
+  const rewardList = document.getElementById("rewardList");
+  if(rewardList){
+    rewardList.innerHTML = scoped.length ? scoped.map(o=>{
+      let pts = 0;
+      if(o.status==="완료") pts += 40+30;
+      if(o.status==="지연") pts -= 10;
+      if(o.priority==="긴급") pts = Math.round(pts*1.5);
+      if(o.priority==="매우긴급") pts = Math.round(pts*2);
+      return `<div class="reward"><div><strong>${o.title}</strong><br><small style="color:#888;">${o.branches.join(', ')} · ${o.status}</small></div><div class="pts">${pts>=0?'+':''}${pts}pt</div></div>`;
+    }).join("") : `<div class="empty-row">표시할 항목이 없습니다.</div>`;
+  }
+
+  // hr table — hq: 전체 지사, mid: 본인 지사만
+  const hrTable = document.getElementById("hrTable");
+  if(hrTable){
+    const hrBranches = tier==="hq" ? branches : [scope.branch];
+    hrTable.innerHTML = hrBranches.map(b=>{
+      const h = hr[b];
+      const vacancy = h.quota - h.current;
+      const bOrders = orders.filter(o=>o.branches.includes(b) && o.status!=="완료").length;
+      const status = vacancy>0 ? `<span class="vacancy-badge">재배분 필요 (진행중 ${bOrders}건)</span>` : `<span style="color:var(--ok);font-size:11px;">정상</span>`;
+      return `<tr><td>${b}</td><td>${h.quota}</td><td>${h.current}</td><td>${h.leave}</td><td>${h.resigned}</td><td>${status}</td></tr>`;
+    }).join("");
+  }
+
+  updateNavBadges();
+}
+
+buildNav();
+</script>
+</body>
+</html>
