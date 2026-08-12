@@ -45,6 +45,7 @@
   .status{font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;}
   .status.진행중{background:#fff2d6;color:var(--wait);} .status.완료{background:#e3f0e3;color:var(--ok);}
   .status.대기{background:#eee;color:#888;} .status.지연{background:#fbe3e3;color:var(--danger);}
+  .status.기타{background:#ece3f5;color:#6a4a91;}
   .bar-outer{background:#eee;border-radius:6px;height:8px;width:100%;overflow:hidden;}
   .bar-inner{height:100%;background:var(--navy);}
   .bar-inner.high{background:var(--danger);}
@@ -65,6 +66,27 @@
   .scope-tag.hq{background:#eef3e6;color:#5c7a3c;}
   .empty-row{text-align:center;color:#999;padding:20px;}
   .nav-badge{display:inline-block;min-width:16px;height:16px;line-height:16px;padding:0 4px;border-radius:9px;background:var(--danger);color:#fff;font-size:10px;font-weight:800;margin-left:6px;text-align:center;vertical-align:2px;}
+  .scope-tag.admin{background:#f6e2e2;color:#8a2f2f;}
+  .admin-field input[type=password]{min-width:110px;}
+  .admin-field .err{color:var(--danger);font-size:11px;margin-top:4px;}
+  .admin-badge{display:inline-flex;align-items:center;gap:6px;background:#8a2f2f;color:#fff;padding:7px 12px;border-radius:6px;font-size:12.5px;font-weight:700;}
+  .admin-badge button{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;font-weight:700;}
+  .mine-list{display:flex;flex-direction:column;gap:14px;}
+  .mine-card{border:1px solid var(--line);border-radius:10px;padding:16px;background:#fff;}
+  .mine-card .mc-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px;}
+  .mine-card .mc-title{font-size:14.5px;font-weight:700;margin:4px 0 2px;}
+  .mine-card .mc-meta{font-size:11.5px;color:#888;}
+  .mine-card .mc-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding-top:12px;border-top:1px solid var(--line);}
+  .mine-card textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;min-height:56px;}
+  .mine-card .btn-soft{border:1px solid var(--line);background:#fbf9f4;padding:7px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;}
+  .thumb-row,.file-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .thumb{position:relative;width:52px;height:52px;border-radius:6px;overflow:hidden;border:1px solid var(--line);}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .chip-x, .thumb .x{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:11px;line-height:18px;cursor:pointer;padding:0;}
+  .file-chip{display:inline-flex;align-items:center;gap:6px;background:#fbf9f4;border:1px solid var(--line);border-radius:14px;padding:4px 10px 4px 12px;font-size:11.5px;}
+  .file-chip button{background:none;border:none;color:var(--danger);cursor:pointer;font-weight:800;font-size:12px;padding:0;}
+  .staff-form{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:16px;}
+  .tablewrap{overflow-x:auto;}
 </style>
 </head>
 <body>
@@ -89,6 +111,10 @@
       <label>역할</label>
       <select id="scope-role"></select>
     </div>
+    <div class="field admin-field" style="max-width:240px;">
+      <label>관리자</label>
+      <div id="adminControls"></div>
+    </div>
     <div class="scope-desc" id="scopeDesc"></div>
   </div>
 
@@ -96,11 +122,8 @@
 
   <section id="sec-mine">
     <div class="panel">
-      <h2>내 업무 <small class="hint" style="font-weight:400;">— 담당지사 · 역할 기준으로 본인에게 배정된 지시만 표시됩니다</small></h2>
-      <table>
-        <thead><tr><th>구분</th><th>제목</th><th>지시본부</th><th>마감</th><th>진척률</th><th>상태</th><th>수행 등록</th></tr></thead>
-        <tbody id="mineTable"></tbody>
-      </table>
+      <h2>내 업무 <small class="hint" style="font-weight:400;">— 담당지사 · 역할 기준으로 본인에게 배정된 지시만 표시됩니다. 조치결과 · 사진 · 첨부파일을 등록하세요.</small></h2>
+      <div class="mine-list" id="mineTable"></div>
     </div>
   </section>
 
@@ -111,7 +134,7 @@
     </div>
     <div class="panel">
       <h2>대구분별 지시 현황</h2>
-      <table><thead><tr><th>구분</th><th>진행 중</th><th>완료</th><th>지연</th><th>평균 진척률</th></tr></thead>
+      <table><thead><tr><th>구분</th><th>진행 중</th><th>완료</th><th>지연</th><th>기타</th><th>평균 진척률</th></tr></thead>
       <tbody id="catSummary"></tbody></table>
     </div>
   </section>
@@ -147,7 +170,8 @@
           <div class="row" id="branchChips"></div>
         </div>
       </div>
-      <button class="primary" onclick="createOrder()">지시 등록</button>
+      <button class="primary" id="createBtn" onclick="createOrder()">지시 등록</button>
+      <button class="chip" id="cancelEditBtn" style="display:none;" onclick="cancelEditOrder()">취소</button>
       <span id="overloadWarn" style="color:var(--danger);font-size:12px;margin-left:12px;"></span>
     </div>
 
@@ -155,9 +179,29 @@
       <h2>업무지시 목록</h2>
       <div class="row" id="filterChips"></div>
       <table>
-        <thead><tr><th>구분</th><th>제목</th><th>지시본부</th><th>대상</th><th>마감</th><th>진척률</th><th>상태</th></tr></thead>
+        <thead><tr><th>구분</th><th>제목</th><th>지시본부</th><th>대상</th><th>마감</th><th>진척률</th><th>상태</th><th id="orderAdminTh" style="display:none;">관리</th></tr></thead>
         <tbody id="orderTable"></tbody>
       </table>
+    </div>
+  </section>
+
+  <section id="sec-staff">
+    <div class="panel">
+      <h2>수행자 관리 <small class="hint" style="font-weight:400;">— 중간관리자는 본인 지사, 관리자는 전 지사 SP·SE·SG 인원을 등록/삭제할 수 있습니다</small></h2>
+      <div class="staff-form">
+        <div class="field" style="max-width:160px;"><label>이름</label><input type="text" id="s-name" placeholder="예: 김도현"></div>
+        <div class="field" style="max-width:150px;"><label>역할</label>
+          <select id="s-role"><option value="SP">SP · 영업담당</option><option value="SE">SE · 기술담당</option><option value="SG">SG · 출동담당</option></select>
+        </div>
+        <div class="field" style="max-width:160px;" id="s-branch-wrap"><label>지사</label><select id="s-branch"></select></div>
+        <button class="primary" onclick="addStaff()">추가</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>이름</th><th>역할</th><th>지사</th><th>관리</th></tr></thead>
+          <tbody id="staffTable"></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -179,7 +223,7 @@
 </main>
 
 <script>
-const branches = ["중앙","강북","서대문","고양","의정부","남양주","강릉","원주"];
+const branches = ["중앙","강북","서대문","고양","의정부","남양주","강릉","원주(춘천)"];
 const categories = {
   "영업": ["신규","유지","일반"],
   "고객": ["금융","일반","긴급"],
@@ -192,7 +236,7 @@ let orders = [
   {id:1, major:"행정", minor:"안전", title:"8월 여름철 이륜차 안전점검 결과 제출", org:"고객서비스본부", branches:["중앙","강북","서대문"], role:"SE", due:"2026-08-20", priority:"긴급", progress:80, status:"진행중"},
   {id:2, major:"영업", minor:"유지", title:"9월 유지영업 목표 재산정 보고", org:"영업본부", branches:["고양","의정부","남양주"], role:"영업팀장", due:"2026-08-25", priority:"일반", progress:45, status:"진행중"},
   {id:3, major:"고객", minor:"금융", title:"설변징수율 미납 고객 리스트 회신", org:"고객서비스본부", branches:branches.slice(), role:"고객팀장", due:"2026-08-15", priority:"매우긴급", progress:100, status:"완료"},
-  {id:4, major:"인사", minor:"복무", title:"하반기 육아휴직 신청 현황 취합", org:"인사총무본부", branches:["강릉","원주"], role:"전체", due:"2026-08-10", priority:"일반", progress:60, status:"지연"},
+  {id:4, major:"인사", minor:"복무", title:"하반기 육아휴직 신청 현황 취합", org:"인사총무본부", branches:["강릉","원주(춘천)"], role:"전체", due:"2026-08-10", priority:"일반", progress:60, status:"지연"},
   {id:5, major:"행정", minor:"차량관리", title:"업무차량 정기점검 이행 확인", org:"고객서비스본부", branches:branches.slice(), role:"SG", due:"2026-08-30", priority:"일반", progress:20, status:"대기"},
   {id:6, major:"영업", minor:"신규", title:"9월 신규가입 프로모션 현장 안내 실시", org:"영업본부", branches:["중앙","강북"], role:"SP", due:"2026-08-22", priority:"일반", progress:35, status:"진행중"},
 ];
@@ -214,8 +258,22 @@ const hr = {
   "의정부":{quota:8,current:6,leave:1,resigned:1},
   "남양주":{quota:9,current:8,leave:0,resigned:1},
   "강릉":{quota:7,current:7,leave:0,resigned:0},
-  "원주":{quota:7,current:5,leave:1,resigned:1},
+  "원주(춘천)":{quota:7,current:5,leave:1,resigned:1},
 };
+
+let staff = [
+  {id:1, branch:"중앙", name:"김도현", role:"SP"}, {id:2, branch:"중앙", name:"이서준", role:"SE"}, {id:3, branch:"중앙", name:"박지훈", role:"SG"},
+  {id:4, branch:"강북", name:"최민재", role:"SP"}, {id:5, branch:"강북", name:"정우성", role:"SE"}, {id:6, branch:"강북", name:"한소영", role:"SG"},
+  {id:7, branch:"서대문", name:"윤태현", role:"SP"}, {id:8, branch:"서대문", name:"오지은", role:"SE"}, {id:9, branch:"서대문", name:"임재혁", role:"SG"},
+  {id:10, branch:"고양", name:"조현우", role:"SP"}, {id:11, branch:"고양", name:"신유진", role:"SE"}, {id:12, branch:"고양", name:"배성민", role:"SG"},
+  {id:13, branch:"의정부", name:"홍승기", role:"SP"}, {id:14, branch:"의정부", name:"강민아", role:"SE"}, {id:15, branch:"의정부", name:"장현수", role:"SG"},
+  {id:16, branch:"남양주", name:"권도윤", role:"SP"}, {id:17, branch:"남양주", name:"문지현", role:"SE"}, {id:18, branch:"남양주", name:"서준영", role:"SG"},
+  {id:19, branch:"강릉", name:"백승호", role:"SP"}, {id:20, branch:"강릉", name:"류하은", role:"SE"}, {id:21, branch:"강릉", name:"안재원", role:"SG"},
+  {id:22, branch:"원주(춘천)", name:"송민석", role:"SP"}, {id:23, branch:"원주(춘천)", name:"전예린", role:"SE"}, {id:24, branch:"원주(춘천)", name:"노형준", role:"SG"},
+];
+let nextStaffId = 25;
+let isAdmin = false;
+const ADMIN_PASSWORD = "0303"; // client-side convenience gate only — not real access control, visible in page source
 
 // ROLE / SCOPE
 const roleMeta = {
@@ -230,18 +288,20 @@ const roleMeta = {
   "사업지원팀장": {label:"사업지원팀장", tier:"hq"},
   "담당자": {label:"담당자(본부)", tier:"hq"},
 };
-const tierLabel = {field:"수행부서", mid:"중간관리부서", hq:"본부"};
+const tierLabel = {field:"수행부서", mid:"중간관리부서", hq:"본부", admin:"관리자"};
 const tabsByTier = {
   field: [["mine","내 업무"],["reward","평가/보상"]],
-  mid:   [["dashboard","대시보드"],["orders","업무지시"],["reward","평가/보상"],["hr","결원현황"]],
+  mid:   [["dashboard","대시보드"],["orders","업무지시"],["staff","수행자 관리"],["reward","평가/보상"],["hr","결원현황"]],
   hq:    [["dashboard","대시보드"],["orders","업무지시"],["reward","평가/보상"],["hr","결원현황"]],
+  admin: [["dashboard","대시보드"],["orders","업무지시"],["staff","수행자 관리"],["reward","평가/보상"],["hr","결원현황"]],
 };
 let scope = { branch: branches[0], role: "담당자" };
 let currentSectionId = null;
+function currentTier(){ return isAdmin ? "admin" : roleMeta[scope.role].tier; }
 const seenKeys = new Set();
 function scopeKey(o){ return `${scope.role}|${scope.branch}|${o.id}`; }
 function unseenMineCount(){
-  if(roleMeta[scope.role].tier !== "field") return 0;
+  if(currentTier() !== "field") return 0;
   return getScopedOrders().filter(o=>!seenKeys.has(scopeKey(o))).length;
 }
 
@@ -259,6 +319,40 @@ const scopeRoleSel = document.getElementById("scope-role");
   });
 scopeRoleSel.value = scope.role;
 scopeRoleSel.onchange = e=>{ scope.role = e.target.value; buildNav(); };
+
+// Admin login (client-side only — see ADMIN_PASSWORD note above)
+const adminControls = document.getElementById("adminControls");
+function renderAdminControls(){
+  if(isAdmin){
+    adminControls.innerHTML = `<div class="admin-badge">관리자 모드<button onclick="exitAdmin()">종료</button></div>`;
+  } else {
+    adminControls.innerHTML = `
+      <div style="display:flex;gap:6px;">
+        <input type="password" id="admin-pw" placeholder="비밀번호" style="min-width:100px;">
+        <button class="chip" onclick="tryAdminLogin()">로그인</button>
+      </div>
+      <div class="err" id="admin-err"></div>`;
+    const pw = document.getElementById("admin-pw");
+    pw.onkeydown = e=>{ if(e.key==="Enter") tryAdminLogin(); };
+  }
+  scopeRoleSel.disabled = isAdmin;
+}
+function tryAdminLogin(){
+  const val = document.getElementById("admin-pw").value;
+  if(val === ADMIN_PASSWORD){
+    isAdmin = true;
+    renderAdminControls();
+    buildNav();
+  } else {
+    document.getElementById("admin-err").textContent = "비밀번호가 올바르지 않습니다.";
+  }
+}
+function exitAdmin(){
+  isAdmin = false;
+  renderAdminControls();
+  buildNav();
+}
+renderAdminControls();
 
 // URL-based entry points: ?v=orders|monitor|branch|exec  (+ optional r=역할, b=지사)
 const linkPresets = {
@@ -278,24 +372,29 @@ scopeBranchSel.value = scope.branch;
 scopeRoleSel.value = scope.role;
 
 function getScopedOrders(){
-  const tier = roleMeta[scope.role].tier;
-  if(tier==="hq") return orders;
+  const tier = currentTier();
+  if(tier==="hq" || tier==="admin") return orders;
   if(tier==="mid") return orders.filter(o=>o.branches.includes(scope.branch));
   return orders.filter(o=>o.branches.includes(scope.branch) && (o.role==="전체" || o.role===scope.role));
 }
+function getScopedStaff(){
+  const tier = currentTier();
+  return tier==="admin" ? staff : staff.filter(s=>s.branch===scope.branch);
+}
 
 function updateScopeDesc(){
-  const tier = roleMeta[scope.role].tier;
-  const branchTxt = tier==="hq" ? "전체 지사" : `${scope.branch}지사`;
+  const tier = currentTier();
+  const branchTxt = (tier==="hq"||tier==="admin") ? "전체 지사" : `${scope.branch}지사`;
+  const roleTxt = tier==="admin" ? "모든 권한" : roleMeta[scope.role].label;
   document.getElementById("scopeDesc").innerHTML =
-    `<span class="scope-tag ${tier}">${tierLabel[tier]}</span> ${branchTxt} · ${roleMeta[scope.role].label} 로 보는 화면입니다.`;
-  scopeBranchSel.closest(".field").style.display = tier==="hq" ? "none" : "";
+    `<span class="scope-tag ${tier}">${tierLabel[tier]}</span> ${branchTxt} · ${roleTxt} 로 보는 화면입니다.`;
+  scopeBranchSel.closest(".field").style.display = (tier==="hq"||tier==="admin") ? "none" : "";
 }
 
 // NAV
 const nav = document.getElementById("nav");
 function buildNav(){
-  const tier = roleMeta[scope.role].tier;
+  const tier = currentTier();
   const tabs = tabsByTier[tier];
   if(!tabs.some(([id])=>id===currentSectionId)) currentSectionId = tabs[0][0];
   nav.innerHTML = "";
@@ -314,7 +413,7 @@ function showSection(id){
   const el = document.getElementById("sec-"+id);
   if(el) el.classList.add("active");
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active", b.dataset.id===id));
-  if(id==="mine" && roleMeta[scope.role].tier==="field"){
+  if(id==="mine" && currentTier()==="field"){
     getScopedOrders().forEach(o=>seenKeys.add(scopeKey(o)));
   }
   render();
@@ -359,19 +458,95 @@ function checkOverload(){
   warn.textContent = overloaded.length ? `⚠ 과부하 주의: ${overloaded.join(", ")} 지사는 현재 진행중 지시 4건 이상 보유` : "";
 }
 
+let editingId = null;
+
 function createOrder(){
   const title = document.getElementById("f-title").value.trim();
   const due = document.getElementById("f-due").value;
   if(!title || !due || selectedBranches.size===0){ alert("제목, 마감일, 대상 지사를 입력해주세요."); return; }
-  orders.push({
-    id: nextId++, major: majorSel.value, minor: document.getElementById("f-minor").value,
+  const fields = {
+    major: majorSel.value, minor: document.getElementById("f-minor").value,
     title, org: document.getElementById("f-org").value, branches: [...selectedBranches],
     role: document.getElementById("f-role").value, due, priority: document.getElementById("f-pri").value,
-    progress: 0, status: "대기"
-  });
+  };
+  if(editingId){
+    const o = orders.find(x=>x.id===editingId);
+    Object.assign(o, fields);
+    cancelEditOrder();
+  } else {
+    orders.push(Object.assign({id: nextId++, progress: 0, status: "대기"}, fields));
+  }
   document.getElementById("f-title").value=""; selectedBranches.clear();
   branchChips.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
   document.getElementById("overloadWarn").textContent="";
+  render();
+}
+
+function startEditOrder(id){
+  if(!isAdmin) return;
+  const o = orders.find(x=>x.id===id); if(!o) return;
+  editingId = id;
+  majorSel.value = o.major; refreshMinor();
+  document.getElementById("f-minor").value = o.minor;
+  document.getElementById("f-org").value = o.org;
+  document.getElementById("f-pri").value = o.priority;
+  document.getElementById("f-title").value = o.title;
+  document.getElementById("f-due").value = o.due;
+  document.getElementById("f-role").value = o.role;
+  selectedBranches.clear(); o.branches.forEach(b=>selectedBranches.add(b));
+  branchChips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", selectedBranches.has(c.textContent)));
+  document.getElementById("createBtn").textContent = "지시 수정 저장";
+  document.getElementById("cancelEditBtn").style.display = "";
+  showSection("orders");
+  const titleEl = document.getElementById("f-title");
+  if(titleEl.scrollIntoView) titleEl.scrollIntoView({behavior:"smooth", block:"center"});
+}
+function cancelEditOrder(){
+  editingId = null;
+  document.getElementById("createBtn").textContent = "지시 등록";
+  document.getElementById("cancelEditBtn").style.display = "none";
+  document.getElementById("f-title").value=""; selectedBranches.clear();
+  branchChips.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+}
+function deleteOrder(id){
+  if(!isAdmin) return;
+  if(!confirm("이 업무지시를 삭제하시겠습니까?")) return;
+  orders = orders.filter(x=>x.id!==id);
+  if(editingId===id) cancelEditOrder();
+  render();
+}
+
+// staff roster (수행자 관리) — mid tier: own branch only, admin: any branch
+const sBranchSel = document.getElementById("s-branch");
+branches.forEach(b=>{ const o=document.createElement("option"); o.value=b; o.textContent=b; sBranchSel.appendChild(o); });
+function syncStaffBranchSelect(){
+  const tier = currentTier();
+  if(tier==="admin"){
+    document.getElementById("s-branch-wrap").style.display = "";
+    sBranchSel.disabled = false;
+  } else {
+    sBranchSel.value = scope.branch;
+    document.getElementById("s-branch-wrap").style.display = "";
+    sBranchSel.disabled = true;
+  }
+}
+function addStaff(){
+  const tier = currentTier();
+  if(tier!=="mid" && tier!=="admin") return;
+  const name = document.getElementById("s-name").value.trim();
+  const role = document.getElementById("s-role").value;
+  const branch = tier==="admin" ? sBranchSel.value : scope.branch;
+  if(!name){ alert("이름을 입력해주세요."); return; }
+  staff.push({id: nextStaffId++, branch, name, role});
+  document.getElementById("s-name").value = "";
+  render();
+}
+function deleteStaff(id){
+  const tier = currentTier();
+  const s = staff.find(x=>x.id===id); if(!s) return;
+  if(tier!=="admin" && !(tier==="mid" && s.branch===scope.branch)) return;
+  if(!confirm(`${s.name}(${s.role}) 인원을 삭제하시겠습니까?`)) return;
+  staff = staff.filter(x=>x.id!==id);
   render();
 }
 
@@ -391,23 +566,59 @@ function recomputeStatus(o){
   else if(o.due < TODAY) o.status="지연";
   else o.status = o.progress>0 ? "진행중" : "대기";
 }
-function updateProgress(id, val){
-  const o = orders.find(x=>x.id===id); if(!o) return;
-  o.progress = Number(val);
-  recomputeStatus(o);
+// 조치결과 등록 — per-order draft state so in-progress edits (사진/첨부/특이사항) survive re-renders
+const drafts = {};
+function getDraft(o){
+  if(!drafts[o.id]){
+    drafts[o.id] = {
+      action: o.status==="완료" ? "완료" : o.status==="기타" ? "기타" : "진행중",
+      note: o.note || "",
+      photos: (o.photos||[]).slice(),
+      attachments: (o.attachments||[]).slice(),
+      progress: o.progress
+    };
+  }
+  return drafts[o.id];
+}
+function setDraftAction(id, val){ getDraft(orders.find(o=>o.id===id)).action = val; render(); }
+function setDraftProgress(id, val){ getDraft(orders.find(o=>o.id===id)).progress = Number(val); }
+function setDraftNote(id, val){ getDraft(orders.find(o=>o.id===id)).note = val; }
+function addDraftPhoto(id, input){
+  const o = orders.find(x=>x.id===id); const d = getDraft(o);
+  [...input.files].forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{ d.photos.push(reader.result); render(); };
+    reader.readAsDataURL(file);
+  });
+  input.value = "";
+}
+function removeDraftPhoto(id, idx){ getDraft(orders.find(o=>o.id===id)).photos.splice(idx,1); render(); }
+function addDraftAttachment(id, input){
+  const o = orders.find(x=>x.id===id); const d = getDraft(o);
+  [...input.files].forEach(file=>d.attachments.push(file.name));
+  input.value = "";
   render();
 }
-function markDone(id){
+function removeDraftAttachment(id, idx){ getDraft(orders.find(o=>o.id===id)).attachments.splice(idx,1); render(); }
+function submitRegistration(id){
   const o = orders.find(x=>x.id===id); if(!o) return;
-  o.progress = 100;
-  recomputeStatus(o);
+  const d = getDraft(o);
+  if(d.action==="기타" && !d.note.trim()){ alert("특이사항을 입력해주세요."); return; }
+  if(d.action==="완료"){ o.progress = 100; o.status = "완료"; }
+  else if(d.action==="기타"){ o.status = "기타"; o.progress = Number(d.progress); }
+  else { o.progress = Number(d.progress); recomputeStatus(o); }
+  o.note = d.note.trim();
+  o.photos = d.photos.slice();
+  o.attachments = d.attachments.slice();
+  o.updatedAt = TODAY;
+  delete drafts[id];
   render();
 }
 
 function render(){
   recalcLoad();
   updateScopeDesc();
-  const tier = roleMeta[scope.role].tier;
+  const tier = currentTier();
   const scoped = getScopedOrders();
 
   // KPIs
@@ -422,30 +633,67 @@ function render(){
     <div class="kpi warn"><div class="n">${delayed}</div><div class="l">지연 지시</div></div>
     <div class="kpi"><div class="n">${avgProgress}%</div><div class="l">평균 진척률</div></div>`;
 
-  // 내 업무 (field tier)
+  // 내 업무 (field tier) — card list with 조치결과/사진/첨부파일 등록
   const mineTable = document.getElementById("mineTable");
   if(mineTable){
-    mineTable.innerHTML = scoped.length ? scoped.map(o=>`
-      <tr>
-        <td><span class="tag ${catColor[o.major]}">${o.major}</span> <small style="color:#888;">${o.minor}</small></td>
-        <td>${o.title}</td>
-        <td>${o.org}</td>
-        <td>${o.due}</td>
-        <td style="min-width:150px;">
-          <input type="range" min="0" max="100" step="5" value="${o.progress}"
-            oninput="this.nextElementSibling.textContent=this.value+'%'"
-            onchange="updateProgress(${o.id}, this.value)" style="width:90px;vertical-align:middle;">
-          <small>${o.progress}%</small>
-        </td>
-        <td><span class="${statusClass(o.status)}">${o.status}</span></td>
-        <td><button class="chip" onclick="markDone(${o.id})">완료 처리</button></td>
-      </tr>`).join("") : `<tr><td colspan="7" class="empty-row">배정된 업무가 없습니다.</td></tr>`;
+    mineTable.innerHTML = scoped.length ? scoped.map(o=>{
+      const d = getDraft(o);
+      const photosHtml = d.photos.map((src,idx)=>`<div class="thumb"><img src="${src}"><button class="x" onclick="removeDraftPhoto(${o.id},${idx})">×</button></div>`).join("");
+      const filesHtml = d.attachments.map((name,idx)=>`<span class="file-chip">${name}<button onclick="removeDraftAttachment(${o.id},${idx})">×</button></span>`).join("");
+      return `
+      <div class="mine-card">
+        <div class="mc-head">
+          <div>
+            <span class="tag ${catColor[o.major]}">${o.major}</span> <small style="color:#888;">${o.minor}</small>
+            <div class="mc-title">${o.title}</div>
+            <div class="mc-meta">${o.org} · 마감 ${o.due}</div>
+          </div>
+          <span class="${statusClass(o.status)}">${o.status}</span>
+        </div>
+        <div class="mc-body">
+          <div>
+            <label>조치결과</label>
+            <select onchange="setDraftAction(${o.id}, this.value)">
+              <option value="진행중" ${d.action==="진행중"?"selected":""}>진행중</option>
+              <option value="완료" ${d.action==="완료"?"selected":""}>완료</option>
+              <option value="기타" ${d.action==="기타"?"selected":""}>기타 (특이사항 기록)</option>
+            </select>
+            ${d.action==="진행중" ? `
+            <div style="margin-top:10px;">
+              <label>진척률</label>
+              <input type="range" min="0" max="100" step="5" value="${d.progress}"
+                oninput="this.nextElementSibling.textContent=this.value+'%'; setDraftProgress(${o.id}, this.value)" style="width:120px;vertical-align:middle;">
+              <small>${d.progress}%</small>
+            </div>` : ""}
+          </div>
+          <div>
+            <label>특이사항${d.action==="기타"?" (필수)":""}</label>
+            <textarea placeholder="예: 고객 부재로 재방문 필요" oninput="setDraftNote(${o.id}, this.value)">${d.note}</textarea>
+          </div>
+          <div>
+            <label>사진촬영</label><br>
+            <input type="file" accept="image/*" capture="environment" id="photo-${o.id}" style="display:none;" onchange="addDraftPhoto(${o.id}, this)">
+            <button type="button" class="btn-soft" onclick="document.getElementById('photo-${o.id}').click()">📷 사진 추가</button>
+            <div class="thumb-row">${photosHtml}</div>
+          </div>
+          <div>
+            <label>첨부파일</label><br>
+            <input type="file" multiple id="file-${o.id}" style="display:none;" onchange="addDraftAttachment(${o.id}, this)">
+            <button type="button" class="btn-soft" onclick="document.getElementById('file-${o.id}').click()">📎 파일 첨부</button>
+            <div class="file-row">${filesHtml}</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <button class="primary" onclick="submitRegistration(${o.id})">수행 등록</button>
+        </div>
+      </div>`;
+    }).join("") : `<div class="empty-row">배정된 업무가 없습니다.</div>`;
   }
 
-  // branch grid (dashboard) — hq: 전체 지사, mid: 본인 지사만
+  // branch grid (dashboard) — hq/admin: 전체 지사, mid: 본인 지사만
   const bg = document.getElementById("branchGrid");
   if(bg){
-    const gridBranches = tier==="hq" ? branches : [scope.branch];
+    const gridBranches = (tier==="hq"||tier==="admin") ? branches : [scope.branch];
     bg.innerHTML = gridBranches.map(b=>{
       const bOrders = orders.filter(o=>o.branches.includes(b));
       const avg = bOrders.length ? Math.round(bOrders.reduce((a,o)=>a+o.progress,0)/bOrders.length) : 0;
@@ -466,25 +714,28 @@ function render(){
       const prog = list.filter(o=>o.status==="진행중").length;
       const done2 = list.filter(o=>o.status==="완료").length;
       const delay = list.filter(o=>o.status==="지연").length;
+      const etc = list.filter(o=>o.status==="기타").length;
       const avg = list.length ? Math.round(list.reduce((a,o)=>a+o.progress,0)/list.length) : 0;
-      return `<tr><td><span class="tag ${catColor[m]}">${m}</span></td><td>${prog}</td><td>${done2}</td><td>${delay}</td><td>${avg}%</td></tr>`;
+      return `<tr><td><span class="tag ${catColor[m]}">${m}</span></td><td>${prog}</td><td>${done2}</td><td>${delay}</td><td>${etc}</td><td>${avg}%</td></tr>`;
     }).join("");
   }
 
   // order table (업무지시 목록) — scoped
   const orderTable = document.getElementById("orderTable");
   if(orderTable){
+    document.getElementById("orderAdminTh").style.display = isAdmin ? "" : "none";
     const filtered = activeFilter==="전체" ? scoped : scoped.filter(o=>o.major===activeFilter);
     orderTable.innerHTML = filtered.length ? filtered.map(o=>`
       <tr>
         <td><span class="tag ${catColor[o.major]}">${o.major}</span> <small style="color:#888;">${o.minor}</small></td>
-        <td>${o.title}</td>
+        <td>${o.title}${o.note ? `<br><small style="color:#999;">📝 ${o.note}</small>` : ""}${o.photos&&o.photos.length ? `<br><small style="color:#999;">📷 사진 ${o.photos.length}장</small>` : ""}</td>
         <td>${o.org}</td>
-        <td>${o.branches.length===8?'전체 지사':o.branches.join(', ')}<br><small style="color:#999;">${o.role}</small></td>
+        <td>${o.branches.length===branches.length?'전체 지사':o.branches.join(', ')}<br><small style="color:#999;">${o.role}</small></td>
         <td>${o.due}</td>
         <td style="min-width:90px;"><div class="bar-outer"><div class="bar-inner ${o.progress<50?'high':''}" style="width:${o.progress}%"></div></div><small>${o.progress}%</small></td>
         <td><span class="${statusClass(o.status)}">${o.status}</span></td>
-      </tr>`).join("") : `<tr><td colspan="7" class="empty-row">해당 조건의 지시가 없습니다.</td></tr>`;
+        ${isAdmin ? `<td style="white-space:nowrap;"><button class="chip" onclick="startEditOrder(${o.id})">수정</button> <button class="chip" onclick="deleteOrder(${o.id})">삭제</button></td>` : ""}
+      </tr>`).join("") : `<tr><td colspan="${isAdmin?8:7}" class="empty-row">해당 조건의 지시가 없습니다.</td></tr>`;
     filterChips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c.textContent===activeFilter));
   }
 
@@ -501,10 +752,10 @@ function render(){
     }).join("") : `<div class="empty-row">표시할 항목이 없습니다.</div>`;
   }
 
-  // hr table — hq: 전체 지사, mid: 본인 지사만
+  // hr table — hq/admin: 전체 지사, mid: 본인 지사만
   const hrTable = document.getElementById("hrTable");
   if(hrTable){
-    const hrBranches = tier==="hq" ? branches : [scope.branch];
+    const hrBranches = (tier==="hq"||tier==="admin") ? branches : [scope.branch];
     hrTable.innerHTML = hrBranches.map(b=>{
       const h = hr[b];
       const vacancy = h.quota - h.current;
@@ -512,6 +763,21 @@ function render(){
       const status = vacancy>0 ? `<span class="vacancy-badge">재배분 필요 (진행중 ${bOrders}건)</span>` : `<span style="color:var(--ok);font-size:11px;">정상</span>`;
       return `<tr><td>${b}</td><td>${h.quota}</td><td>${h.current}</td><td>${h.leave}</td><td>${h.resigned}</td><td>${status}</td></tr>`;
     }).join("");
+  }
+
+  // staff roster (수행자 관리) — mid: 본인 지사, admin: 전체
+  const staffTable = document.getElementById("staffTable");
+  if(staffTable){
+    syncStaffBranchSelect();
+    const list = getScopedStaff();
+    const canManage = tier==="mid" || tier==="admin";
+    staffTable.innerHTML = list.length ? list.map(s=>`
+      <tr>
+        <td>${s.name}</td>
+        <td>${roleMeta[s.role].label}</td>
+        <td>${s.branch}</td>
+        <td>${canManage ? `<button class="chip" onclick="deleteStaff(${s.id})">삭제</button>` : ""}</td>
+      </tr>`).join("") : `<tr><td colspan="4" class="empty-row">등록된 인원이 없습니다.</td></tr>`;
   }
 
   updateNavBadges();
