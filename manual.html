@@ -227,7 +227,7 @@
         <div class="flow-arrow"><span>지시 하달 ⟶</span><span>⟵ 진척률 · 완료 보고</span></div>
         <div class="flow-box">
           <h4><span class="tier-dot" style="background:var(--field)"></span>수행부서</h4>
-          <p>SP 영업담당 · SE 기술담당 · SG 출동담당 — 본인에게 배정된 업무를 확인·수행하고, 현장에서 발견한 새 업무를 직접 등록할 수도 있습니다.</p>
+          <p>SP 영업담당 · SE 기술담당 · SG 출동담당 — 담당지사 안에서도 담당구역 단위로 배정된 업무만 확인·수행하고, 현장에서 발견한 새 업무를 직접 등록할 수도 있습니다.</p>
         </div>
       </div>
 
@@ -237,7 +237,7 @@
         <div class="feat"><h4>업무지시</h4><p>대구분 · 지시본부 · 우선순위 · 대상직급 · 대상지사 · 마감일을 지정해 지시를 등록합니다.</p></div>
         <div class="feat"><h4>내 업무</h4><p>수행부서 전용 화면. 본인 지사 · 역할 기준으로 배정된 지시만 카드로 표시되고, 조치결과 · 사진 · 첨부파일을 그 자리에서 등록하며, 새 지시는 배지로 알려줍니다.</p></div>
         <div class="feat"><h4>평가 · 보상</h4><p>기한 내 완료 +40pt · 진척률 100% +30pt · 지연 1일당 −10pt, 우선순위에 따라 가중치가 적용됩니다.</p></div>
-        <div class="feat"><h4>수행자 관리</h4><p>중간관리자가 본인 지사의 SP · SE · SG 인원을 등록 · 삭제합니다.</p></div>
+        <div class="feat"><h4>수행자 관리</h4><p>중간관리자가 본인 지사의 SP · SE · SG 인원을 담당구역과 함께 등록 · 삭제합니다.</p></div>
         <div class="feat"><h4>결원현황</h4><p>지사별 정원 · 현원 · 육아휴직 · 퇴사 인원과 업무 재배분 필요 여부를 표시합니다.</p></div>
         <div class="feat"><h4>역할 전환</h4><p>화면 상단에서 담당지사와 역할을 바꾸면, 로그인 없이 해당 시점의 화면으로 즉시 전환됩니다.</p></div>
         <div class="feat"><h4>관리자 모드</h4><p>비밀번호로 전 지사 · 전 권한 화면으로 전환해 지시를 수정 · 삭제하고 모든 지사의 수행자를 관리합니다.</p></div>
@@ -320,6 +320,7 @@
             <tr><td>우선순위</td><td>처리 시급도. 완료 시 보상 포인트 가중치에 반영</td><td class="ex">일반 / 긴급(×1.5) / 매우긴급(×2)</td></tr>
             <tr><td>대상 직급</td><td>지시를 받는 역할. 전체는 모든 역할에 노출</td><td class="ex">SP · SE · SG · 지사장 … · 전체</td></tr>
             <tr><td>대상 지사</td><td>지시를 받는 지사(복수 선택)</td><td class="ex">중앙, 강북, 서대문 …</td></tr>
+            <tr><td>대상 구역</td><td>선택 시 그 구역 소속 인원에게만 노출. 지사마다 2개 구역이 있고, 구역을 고르면 대상 지사가 그 구역의 지사 하나로 자동 고정됨(다지사 선택과 충돌 방지)</td><td class="ex">종로동, 명동, 교동 …</td></tr>
             <tr><td>마감일</td><td>처리 기한. 경과 시 자동 지연 처리</td><td class="ex">2026-08-30</td></tr>
           </tbody>
         </table>
@@ -361,7 +362,7 @@
           <div><p class="step-title">업무지시 등록 · 하달</p><p class="step-body"><code>업무지시</code> 탭에서 소속 SP · SE · SG에게 새 지시를 등록할 수 있습니다. 등록 방법은 <a href="#orders" style="color:var(--mid);">업무지시 매뉴얼</a>과 동일합니다.</p></div>
         </li>
         <li>
-          <div><p class="step-title">수행자 관리</p><p class="step-body"><code>수행자 관리</code> 탭에서 본인 지사의 SP · SE · SG 인원을 확인합니다. 이름과 역할을 입력하고 <code>추가</code>를 누르면 본인 지사로 즉시 등록되고, 각 행의 <code>삭제</code>로 인원을 뺄 수 있습니다. 다른 지사 인원은 보이지 않습니다.</p></div>
+          <div><p class="step-title">수행자 관리</p><p class="step-body"><code>수행자 관리</code> 탭에서 본인 지사의 SP · SE · SG 인원을 담당구역별로 확인합니다. 이름 · 역할 · 담당구역을 입력하고 <code>추가</code>를 누르면 본인 지사로 즉시 등록되고, 각 행의 <code>삭제</code>로 인원을 뺄 수 있습니다. 다른 지사 인원은 보이지 않습니다.</p></div>
         </li>
         <li>
           <div><p class="step-title">결원현황 확인</p><p class="step-body"><code>결원현황</code> 탭에서 본인 지사의 정원 · 현원 · 육아휴직 · 퇴사와 <code>재배분 필요</code> 여부만 표시됩니다.</p></div>
@@ -379,20 +380,20 @@
       <div class="linkcard">
         <div>
           <div class="meta">접속 링크 · 기본 역할 SP</div>
-          <code>?v=exec&amp;r=역할&amp;b=지사</code>
+          <code>?v=exec&amp;r=역할&amp;b=지사&amp;z=구역</code>
         </div>
         <a class="go" href="https://heebonpark.github.io/task-order-solution/?v=exec" target="_blank" rel="noopener">현장수행 화면 열기 ⟶</a>
       </div>
 
       <ol class="steps">
         <li>
-          <div><p class="step-title">담당지사 · 역할 선택</p><p class="step-body">진입하면 바로 <code>내 업무</code> 탭이 열립니다. 상단에서 본인 <code>담당지사</code>와 역할(SP 영업담당 · SE 기술담당 · SG 출동담당)을 고릅니다. 링크에 <code>&r=SE&b=강릉</code>처럼 붙이면 앱을 열 때부터 바로 그 조합으로 진입합니다.</p></div>
+          <div><p class="step-title">담당지사 · 역할 · 담당구역 선택</p><p class="step-body">진입하면 바로 <code>내 업무</code> 탭이 열립니다. 상단에서 본인 <code>담당지사</code>, 역할(SP 영업담당 · SE 기술담당 · SG 출동담당), <code>담당구역</code>을 고릅니다. 담당구역은 지사마다 2곳씩 있고(예: 중앙지사 → 종로동 · 명동), 지사를 바꾸면 구역 목록도 그 지사 것으로 바뀝니다. 링크에 <code>&r=SE&b=강릉&z=교동</code>처럼 붙이면 앱을 열 때부터 바로 그 조합으로 진입합니다.</p></div>
         </li>
         <li>
-          <div><p class="step-title">배정된 업무 확인</p><p class="step-body">본인 지사 · 역할로 지정되었거나 대상이 <code>전체</code>인 지시만 표에 나타납니다. 다른 지사, 다른 역할의 지시는 보이지 않습니다.</p></div>
+          <div><p class="step-title">배정된 업무 확인</p><p class="step-body">본인 지사 · 역할로 지정되었거나 대상이 <code>전체</code>인 지시만 표에 나타납니다. 지시에 특정 구역이 지정되어 있으면 본인 담당구역과 일치할 때만 보이고, 같은 지사 · 같은 역할이라도 담당구역이 다른 동료의 업무는 섞여 보이지 않습니다. 구역이 지정되지 않은 지시는 그 지사 · 역할 전체에 보입니다.</p></div>
         </li>
         <li>
-          <div><p class="step-title">현장에서 새 업무 직접 등록</p><p class="step-body">지시를 받기 전이라도 현장에서 발견한 업무가 있으면 <code>업무지시</code> 탭에서 직접 등록할 수 있습니다. 등록 방법은 <a href="#orders" style="color:var(--field);">업무지시 매뉴얼</a>과 동일합니다.</p></div>
+          <div><p class="step-title">현장에서 새 업무 직접 등록</p><p class="step-body">지시를 받기 전이라도 현장에서 발견한 업무가 있으면 <code>업무지시</code> 탭에서 직접 등록할 수 있습니다. 탭을 열면 대상 직급 · 구역이 자동으로 본인 것으로 채워져 있어(지사 전체로 흩뿌려지지 않음) 제목 · 마감일만 입력하면 됩니다. 등록 방법은 <a href="#orders" style="color:var(--field);">업무지시 매뉴얼</a>과 동일합니다.</p></div>
         </li>
         <li>
           <div><p class="step-title">조치결과 선택</p><p class="step-body">각 업무 카드에서 <code>조치결과</code>를 진행중 · 완료 · 기타 중에서 고릅니다. <code>진행중</code>을 고르면 진척률 슬라이더가 나타나 세부 % 를 조정할 수 있고, <code>완료</code>는 자동으로 100%가 됩니다. <code>기타</code>는 지연 · 보류 등 예외 상황을 기록할 때 사용합니다.</p></div>
