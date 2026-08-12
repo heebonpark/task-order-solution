@@ -260,10 +260,11 @@ const scopeRoleSel = document.getElementById("scope-role");
 scopeRoleSel.value = scope.role;
 scopeRoleSel.onchange = e=>{ scope.role = e.target.value; buildNav(); };
 
-// URL-based entry points: ?v=orders|monitor|exec  (+ optional r=역할, b=지사)
+// URL-based entry points: ?v=orders|monitor|branch|exec  (+ optional r=역할, b=지사)
 const linkPresets = {
   orders:  { role:"담당자",  section:"orders"    },
   monitor: { role:"본부장",  section:"dashboard" },
+  branch:  { role:"지사장",  section:"dashboard" },
   exec:    { role:"SP",     section:"mine"      },
 };
 const urlParams = new URLSearchParams(location.search);
