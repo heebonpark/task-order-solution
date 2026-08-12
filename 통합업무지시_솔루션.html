@@ -122,6 +122,10 @@
       <label>역할</label>
       <select id="scope-role"></select>
     </div>
+    <div class="field" style="max-width:170px;">
+      <label>담당구역</label>
+      <select id="scope-zone"></select>
+    </div>
     <div class="field admin-field" style="max-width:240px;">
       <label>관리자</label>
       <div id="adminControls"></div>
@@ -185,11 +189,13 @@
             <option>본부장</option><option>사업지원팀장</option><option>담당자</option>
           </select>
         </div>
+        <div class="field"><label>대상 구역 (선택)</label><select id="f-zone"></select></div>
       </div>
       <div class="row">
         <div style="flex:1;">
           <label>대상 지사 (복수 선택)</label>
           <div class="row" id="branchChips"></div>
+          <small class="hint" id="zoneHint" style="display:none;"></small>
         </div>
       </div>
       <button class="primary" id="createBtn" onclick="createOrder()">지시 등록</button>
@@ -216,11 +222,12 @@
           <select id="s-role"><option value="SP">SP · 영업담당</option><option value="SE">SE · 기술담당</option><option value="SG">SG · 출동담당</option></select>
         </div>
         <div class="field" style="max-width:160px;" id="s-branch-wrap"><label>지사</label><select id="s-branch"></select></div>
+        <div class="field" style="max-width:150px;"><label>담당구역</label><select id="s-zone"></select></div>
         <button class="primary" onclick="addStaff()">추가</button>
       </div>
       <div class="tablewrap">
         <table>
-          <thead><tr><th>이름</th><th>역할</th><th>지사</th><th>관리</th></tr></thead>
+          <thead><tr><th>이름</th><th>역할</th><th>지사</th><th>담당구역</th><th>관리</th></tr></thead>
           <tbody id="staffTable"></tbody>
         </table>
       </div>
@@ -254,15 +261,38 @@ const categories = {
 };
 const catColor = {"영업":"영업","고객":"고객","행정":"행정","인사":"인사"};
 
+// 담당구역 — 지사별 하위 구역. 원주(춘천) 지사는 원주·춘천 두 도시를 커버하므로 구역도 그렇게 나뉜다.
+const zonesByBranch = {
+  "중앙": ["종로동","명동"],
+  "강북": ["수유동","미아동"],
+  "서대문": ["홍제동","연희동"],
+  "고양": ["일산동","화정동"],
+  "의정부": ["신곡동","호원동"],
+  "남양주": ["다산동","별내동"],
+  "강릉": ["교동","포남동"],
+  "원주(춘천)": ["원주 단계동","춘천 퇴계동"],
+};
+const zoneToBranch = {};
+Object.keys(zonesByBranch).forEach(b=>zonesByBranch[b].forEach(z=>zoneToBranch[z]=b));
+const allZones = Object.values(zonesByBranch).flat();
+
 let orders = [
-  {id:1, major:"행정", minor:"안전", title:"8월 여름철 이륜차 안전점검 결과 제출", org:"고객서비스본부", branches:["중앙","강북","서대문"], role:"SE", due:"2026-08-20", priority:"긴급", progress:80, status:"진행중"},
-  {id:2, major:"영업", minor:"유지", title:"9월 유지영업 목표 재산정 보고", org:"영업본부", branches:["고양","의정부","남양주"], role:"영업팀장", due:"2026-08-25", priority:"일반", progress:45, status:"진행중"},
-  {id:3, major:"고객", minor:"금융", title:"설변징수율 미납 고객 리스트 회신", org:"고객서비스본부", branches:branches.slice(), role:"고객팀장", due:"2026-08-15", priority:"매우긴급", progress:100, status:"완료"},
-  {id:4, major:"인사", minor:"복무", title:"하반기 육아휴직 신청 현황 취합", org:"인사총무본부", branches:["강릉","원주(춘천)"], role:"전체", due:"2026-08-10", priority:"일반", progress:60, status:"지연"},
-  {id:5, major:"행정", minor:"차량관리", title:"업무차량 정기점검 이행 확인", org:"고객서비스본부", branches:branches.slice(), role:"SG", due:"2026-08-30", priority:"일반", progress:20, status:"대기"},
-  {id:6, major:"영업", minor:"신규", title:"9월 신규가입 프로모션 현장 안내 실시", org:"영업본부", branches:["중앙","강북"], role:"SP", due:"2026-08-22", priority:"일반", progress:35, status:"진행중"},
+  {id:1, major:"행정", minor:"안전", title:"8월 여름철 이륜차 안전점검 결과 제출", org:"고객서비스본부", branches:["중앙","강북","서대문"], zone:"", role:"SE", due:"2026-08-20", priority:"긴급", progress:80, status:"진행중"},
+  {id:2, major:"영업", minor:"유지", title:"9월 유지영업 목표 재산정 보고", org:"영업본부", branches:["고양","의정부","남양주"], zone:"", role:"영업팀장", due:"2026-08-25", priority:"일반", progress:45, status:"진행중"},
+  {id:3, major:"고객", minor:"금융", title:"설변징수율 미납 고객 리스트 회신", org:"고객서비스본부", branches:branches.slice(), zone:"", role:"고객팀장", due:"2026-08-15", priority:"매우긴급", progress:100, status:"완료"},
+  {id:4, major:"인사", minor:"복무", title:"하반기 육아휴직 신청 현황 취합", org:"인사총무본부", branches:["강릉","원주(춘천)"], zone:"", role:"전체", due:"2026-08-10", priority:"일반", progress:60, status:"지연"},
+  {id:5, major:"행정", minor:"차량관리", title:"업무차량 정기점검 이행 확인", org:"고객서비스본부", branches:branches.slice(), zone:"", role:"SG", due:"2026-08-30", priority:"일반", progress:20, status:"대기"},
+  {id:6, major:"영업", minor:"신규", title:"9월 신규가입 프로모션 현장 안내 실시", org:"영업본부", branches:["중앙","강북"], zone:"", role:"SP", due:"2026-08-22", priority:"일반", progress:35, status:"진행중"},
+  {id:7, major:"고객", minor:"긴급", title:"종로동 정전 민원 현장 확인", org:"고객서비스본부", branches:["중앙"], zone:"종로동", role:"SG", due:"2026-08-14", priority:"매우긴급", progress:70, status:"진행중"},
+  {id:8, major:"영업", minor:"신규", title:"명동 상권 신규가입 프로모션", org:"영업본부", branches:["중앙"], zone:"명동", role:"SP", due:"2026-08-18", priority:"일반", progress:50, status:"진행중"},
+  {id:9, major:"행정", minor:"사고관리", title:"수유동 설비 침수 피해 접수", org:"고객서비스본부", branches:["강북"], zone:"수유동", role:"SG", due:"2026-08-12", priority:"매우긴급", progress:40, status:"기타", note:"현장 접근로 통제로 지연, 구청 협조 요청함"},
+  {id:10, major:"고객", minor:"일반", title:"일산동 요금 문의 다발 지역 점검", org:"고객서비스본부", branches:["고양"], zone:"일산동", role:"SE", due:"2026-08-09", priority:"일반", progress:30, status:"지연"},
+  {id:11, major:"영업", minor:"유지", title:"화정동 해지방어 캠페인", org:"영업본부", branches:["고양"], zone:"화정동", role:"SP", due:"2026-08-28", priority:"긴급", progress:15, status:"진행중"},
+  {id:12, major:"행정", minor:"차량관리", title:"원주 단계동 출동차량 블랙박스 점검", org:"고객서비스본부", branches:["원주(춘천)"], zone:"원주 단계동", role:"SG", due:"2026-08-24", priority:"일반", progress:0, status:"대기"},
+  {id:13, major:"고객", minor:"금융", title:"춘천 퇴계동 자동이체 오류 민원", org:"고객서비스본부", branches:["원주(춘천)"], zone:"춘천 퇴계동", role:"SE", due:"2026-08-11", priority:"긴급", progress:60, status:"지연"},
+  {id:14, major:"인사", minor:"교육", title:"9월 신규 SP 대상 영업교육 참석", org:"인사총무본부", branches:branches.slice(), zone:"", role:"SP", due:"2026-08-27", priority:"일반", progress:0, status:"대기"},
 ];
-let nextId = 7;
+let nextId = 15;
 let activeFilter = "전체";
 
 const branchLoad = {}; branches.forEach(b=>branchLoad[b]=0);
@@ -283,17 +313,24 @@ const hr = {
   "원주(춘천)":{quota:7,current:5,leave:1,resigned:1},
 };
 
-let staff = [
-  {id:1, branch:"중앙", name:"김도현", role:"SP"}, {id:2, branch:"중앙", name:"이서준", role:"SE"}, {id:3, branch:"중앙", name:"박지훈", role:"SG"},
-  {id:4, branch:"강북", name:"최민재", role:"SP"}, {id:5, branch:"강북", name:"정우성", role:"SE"}, {id:6, branch:"강북", name:"한소영", role:"SG"},
-  {id:7, branch:"서대문", name:"윤태현", role:"SP"}, {id:8, branch:"서대문", name:"오지은", role:"SE"}, {id:9, branch:"서대문", name:"임재혁", role:"SG"},
-  {id:10, branch:"고양", name:"조현우", role:"SP"}, {id:11, branch:"고양", name:"신유진", role:"SE"}, {id:12, branch:"고양", name:"배성민", role:"SG"},
-  {id:13, branch:"의정부", name:"홍승기", role:"SP"}, {id:14, branch:"의정부", name:"강민아", role:"SE"}, {id:15, branch:"의정부", name:"장현수", role:"SG"},
-  {id:16, branch:"남양주", name:"권도윤", role:"SP"}, {id:17, branch:"남양주", name:"문지현", role:"SE"}, {id:18, branch:"남양주", name:"서준영", role:"SG"},
-  {id:19, branch:"강릉", name:"백승호", role:"SP"}, {id:20, branch:"강릉", name:"류하은", role:"SE"}, {id:21, branch:"강릉", name:"안재원", role:"SG"},
-  {id:22, branch:"원주(춘천)", name:"송민석", role:"SP"}, {id:23, branch:"원주(춘천)", name:"전예린", role:"SE"}, {id:24, branch:"원주(춘천)", name:"노형준", role:"SG"},
+// 지사 × 담당구역 × 역할(SP/SE/SG) 조합으로 인원을 생성 — 담당구역까지 지정된 실제 현장 인력을 표현
+const staffNamePool = [
+  "김도현","이서준","박지훈","최민재","정재원","한소영","윤태현","오지은","임재혁","조현우",
+  "신유진","배성민","홍승기","강민아","장현수","권도윤","문지현","서준영","백승호","류하은",
+  "안재원","송민석","전예린","노형준","황지훈","남궁민","서지우","조은서","유하준","임도영",
+  "배수아","신동혁","권나연","문성현","오세진","임하늘","강태윤","최수빈","정민준","한지원",
+  "윤서연","조민석","백지원","류승우","안소연","송지훈","전민경","노은지"
 ];
-let nextStaffId = 25;
+let staff = [];
+let nextStaffId = 1;
+Object.keys(zonesByBranch).forEach(branch=>{
+  zonesByBranch[branch].forEach(zone=>{
+    ["SP","SE","SG"].forEach(role=>{
+      staff.push({ id: nextStaffId, branch, zone, role, name: staffNamePool[(nextStaffId-1) % staffNamePool.length] });
+      nextStaffId++;
+    });
+  });
+});
 let isAdmin = false;
 const ADMIN_PASSWORD = "0303"; // client-side convenience gate only — not real access control, visible in page source
 
@@ -317,11 +354,11 @@ const tabsByTier = {
   hq:    [["dashboard","대시보드"],["insight","인사이트"],["orders","업무지시"],["reward","평가/보상"],["hr","결원현황"]],
   admin: [["dashboard","대시보드"],["insight","인사이트"],["orders","업무지시"],["staff","수행자 관리"],["reward","평가/보상"],["hr","결원현황"]],
 };
-let scope = { branch: branches[0], role: "담당자" };
+let scope = { branch: branches[0], role: "담당자", zone: zonesByBranch[branches[0]][0] };
 let currentSectionId = null;
 function currentTier(){ return isAdmin ? "admin" : roleMeta[scope.role].tier; }
 const seenKeys = new Set();
-function scopeKey(o){ return `${scope.role}|${scope.branch}|${o.id}`; }
+function scopeKey(o){ return `${scope.role}|${scope.branch}|${scope.zone}|${o.id}`; }
 function unseenMineCount(){
   if(currentTier() !== "field") return 0;
   return getScopedOrders().filter(o=>!seenKeys.has(scopeKey(o))).length;
@@ -335,7 +372,17 @@ function insightWarnCount(){
 const scopeBranchSel = document.getElementById("scope-branch");
 branches.forEach(b=>{ const o=document.createElement("option"); o.value=b; o.textContent=b+"지사"; scopeBranchSel.appendChild(o); });
 scopeBranchSel.value = scope.branch;
-scopeBranchSel.onchange = e=>{ scope.branch = e.target.value; render(); };
+scopeBranchSel.onchange = e=>{ scope.branch = e.target.value; refreshScopeZoneOptions(); render(); };
+
+const scopeZoneSel = document.getElementById("scope-zone");
+function refreshScopeZoneOptions(){
+  scopeZoneSel.innerHTML = "";
+  zonesByBranch[scope.branch].forEach(z=>{ const o=document.createElement("option"); o.value=z; o.textContent=z; scopeZoneSel.appendChild(o); });
+  if(!zonesByBranch[scope.branch].includes(scope.zone)) scope.zone = zonesByBranch[scope.branch][0];
+  scopeZoneSel.value = scope.zone;
+}
+refreshScopeZoneOptions();
+scopeZoneSel.onchange = e=>{ scope.zone = e.target.value; render(); };
 
 const scopeRoleSel = document.getElementById("scope-role");
 [["수행부서 (현장)",["SP","SE","SG"]],["중간관리부서",["지사장","영업팀장","고객팀장","지사내근"]],["본부",["본부장","사업지원팀장","담당자"]]]
@@ -395,14 +442,17 @@ if(preset){
   currentSectionId = preset.section;
 }
 if(urlParams.get("b") && branches.includes(urlParams.get("b"))) scope.branch = urlParams.get("b");
+if(urlParams.get("z") && allZones.includes(urlParams.get("z"))) scope.branch = zoneToBranch[urlParams.get("z")];
 scopeBranchSel.value = scope.branch;
+refreshScopeZoneOptions();
+if(urlParams.get("z") && allZones.includes(urlParams.get("z"))){ scope.zone = urlParams.get("z"); scopeZoneSel.value = scope.zone; }
 scopeRoleSel.value = scope.role;
 
 function getScopedOrders(){
   const tier = currentTier();
   if(tier==="hq" || tier==="admin") return orders;
   if(tier==="mid") return orders.filter(o=>o.branches.includes(scope.branch));
-  return orders.filter(o=>o.branches.includes(scope.branch) && (o.role==="전체" || o.role===scope.role));
+  return orders.filter(o=>o.branches.includes(scope.branch) && (o.role==="전체" || o.role===scope.role) && (!o.zone || o.zone===scope.zone));
 }
 function getScopedStaff(){
   const tier = currentTier();
@@ -412,10 +462,12 @@ function getScopedStaff(){
 function updateScopeDesc(){
   const tier = currentTier();
   const branchTxt = (tier==="hq"||tier==="admin") ? "전체 지사" : `${scope.branch}지사`;
+  const zoneTxt = tier==="field" ? ` · ${scope.zone}` : "";
   const roleTxt = tier==="admin" ? "모든 권한" : roleMeta[scope.role].label;
   document.getElementById("scopeDesc").innerHTML =
-    `<span class="scope-tag ${tier}">${tierLabel[tier]}</span> ${branchTxt} · ${roleTxt} 로 보는 화면입니다.`;
+    `<span class="scope-tag ${tier}">${tierLabel[tier]}</span> ${branchTxt}${zoneTxt} · ${roleTxt} 로 보는 화면입니다.`;
   scopeBranchSel.closest(".field").style.display = (tier==="hq"||tier==="admin") ? "none" : "";
+  scopeZoneSel.closest(".field").style.display = tier==="field" ? "" : "none";
 }
 
 // NAV
@@ -442,6 +494,13 @@ function showSection(id){
   document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active", b.dataset.id===id));
   if(id==="mine" && currentTier()==="field"){
     getScopedOrders().forEach(o=>seenKeys.add(scopeKey(o)));
+  }
+  // 현장 담당자가 업무지시 탭을 열면, 대상을 "전체"로 흩뿌리기보다 본인 역할·구역으로 기본 지정
+  // (직접 발견한 문제를 등록하는 상황이 많으므로). 편집 중이거나 이미 입력 중인 폼은 건드리지 않음.
+  if(id==="orders" && currentTier()==="field" && !editingId && document.getElementById("f-title").value===""){
+    document.getElementById("f-role").value = scope.role;
+    fZoneSel.value = scope.zone;
+    fZoneSel.dispatchEvent(new Event("change"));
   }
   render();
 }
@@ -485,6 +544,29 @@ function checkOverload(){
   warn.textContent = overloaded.length ? `⚠ 과부하 주의: ${overloaded.join(", ")} 지사는 현재 진행중 지시 4건 이상 보유` : "";
 }
 
+// 대상 구역 — 지정하면 해당 지사 하나로 대상 지사가 자동 고정됨 (구역은 지사에 속하므로 다지사 대상과 충돌 방지)
+const fZoneSel = document.getElementById("f-zone");
+(function(){
+  const optAll = document.createElement("option"); optAll.value=""; optAll.textContent="전체 (지사 단위)"; fZoneSel.appendChild(optAll);
+  Object.keys(zonesByBranch).forEach(b=>{
+    const og = document.createElement("optgroup"); og.label = b;
+    zonesByBranch[b].forEach(z=>{ const o=document.createElement("option"); o.value=z; o.textContent=z; og.appendChild(o); });
+    fZoneSel.appendChild(og);
+  });
+})();
+fZoneSel.onchange = ()=>{
+  const zoneHint = document.getElementById("zoneHint");
+  if(fZoneSel.value){
+    const b = zoneToBranch[fZoneSel.value];
+    selectedBranches.clear(); selectedBranches.add(b);
+    branchChips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c.textContent===b));
+    checkOverload();
+    zoneHint.style.display = ""; zoneHint.textContent = `"${fZoneSel.value}" 구역은 ${b}지사 소속이라 대상 지사가 자동으로 ${b}로 지정됩니다.`;
+  } else {
+    zoneHint.style.display = "none";
+  }
+};
+
 let editingId = null;
 
 function createOrder(){
@@ -494,7 +576,7 @@ function createOrder(){
   const fields = {
     major: majorSel.value, minor: document.getElementById("f-minor").value,
     title, org: document.getElementById("f-org").value, branches: [...selectedBranches],
-    role: document.getElementById("f-role").value, due, priority: document.getElementById("f-pri").value,
+    role: document.getElementById("f-role").value, zone: fZoneSel.value, due, priority: document.getElementById("f-pri").value,
   };
   if(editingId){
     const o = orders.find(x=>x.id===editingId);
@@ -506,6 +588,7 @@ function createOrder(){
   document.getElementById("f-title").value=""; selectedBranches.clear();
   branchChips.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
   document.getElementById("overloadWarn").textContent="";
+  fZoneSel.value=""; document.getElementById("zoneHint").style.display="none";
   render();
 }
 
@@ -520,6 +603,8 @@ function startEditOrder(id){
   document.getElementById("f-title").value = o.title;
   document.getElementById("f-due").value = o.due;
   document.getElementById("f-role").value = o.role;
+  fZoneSel.value = o.zone || "";
+  document.getElementById("zoneHint").style.display = "none";
   selectedBranches.clear(); o.branches.forEach(b=>selectedBranches.add(b));
   branchChips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", selectedBranches.has(c.textContent)));
   document.getElementById("createBtn").textContent = "지시 수정 저장";
@@ -534,6 +619,7 @@ function cancelEditOrder(){
   document.getElementById("cancelEditBtn").style.display = "none";
   document.getElementById("f-title").value=""; selectedBranches.clear();
   branchChips.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+  fZoneSel.value=""; document.getElementById("zoneHint").style.display="none";
 }
 function deleteOrder(id){
   if(!isAdmin) return;
@@ -546,6 +632,12 @@ function deleteOrder(id){
 // staff roster (수행자 관리) — mid tier: own branch only, admin: any branch
 const sBranchSel = document.getElementById("s-branch");
 branches.forEach(b=>{ const o=document.createElement("option"); o.value=b; o.textContent=b; sBranchSel.appendChild(o); });
+const sZoneSel = document.getElementById("s-zone");
+function refreshStaffZoneOptions(){
+  sZoneSel.innerHTML = "";
+  zonesByBranch[sBranchSel.value].forEach(z=>{ const o=document.createElement("option"); o.value=z; o.textContent=z; sZoneSel.appendChild(o); });
+}
+sBranchSel.onchange = refreshStaffZoneOptions;
 function syncStaffBranchSelect(){
   const tier = currentTier();
   if(tier==="admin"){
@@ -556,6 +648,7 @@ function syncStaffBranchSelect(){
     document.getElementById("s-branch-wrap").style.display = "";
     sBranchSel.disabled = true;
   }
+  refreshStaffZoneOptions();
 }
 function addStaff(){
   const tier = currentTier();
@@ -563,8 +656,9 @@ function addStaff(){
   const name = document.getElementById("s-name").value.trim();
   const role = document.getElementById("s-role").value;
   const branch = tier==="admin" ? sBranchSel.value : scope.branch;
+  const zone = sZoneSel.value;
   if(!name){ alert("이름을 입력해주세요."); return; }
-  staff.push({id: nextStaffId++, branch, name, role});
+  staff.push({id: nextStaffId++, branch, zone, name, role});
   document.getElementById("s-name").value = "";
   render();
 }
@@ -767,7 +861,7 @@ function render(){
           <div>
             <span class="tag ${catColor[o.major]}">${o.major}</span> <small style="color:#888;">${o.minor}</small>
             <div class="mc-title">${o.title}</div>
-            <div class="mc-meta">${o.org} · 마감 ${o.due}</div>
+            <div class="mc-meta">${o.org}${o.zone?' · '+o.zone:''} · 마감 ${o.due}</div>
           </div>
           <span class="${statusClass(o.status)}">${o.status}</span>
         </div>
@@ -873,7 +967,7 @@ function render(){
         <td><span class="tag ${catColor[o.major]}">${o.major}</span> <small style="color:#888;">${o.minor}</small></td>
         <td>${o.title}${o.note ? `<br><small style="color:#999;">📝 ${o.note}</small>` : ""}${o.photos&&o.photos.length ? `<br><small style="color:#999;">📷 사진 ${o.photos.length}장</small>` : ""}</td>
         <td>${o.org}</td>
-        <td>${o.branches.length===branches.length?'전체 지사':o.branches.join(', ')}<br><small style="color:#999;">${o.role}</small></td>
+        <td>${o.branches.length===branches.length?'전체 지사':o.branches.join(', ')}<br><small style="color:#999;">${o.role}${o.zone?' · '+o.zone:''}</small></td>
         <td>${o.due}</td>
         <td style="min-width:90px;"><div class="bar-outer"><div class="bar-inner ${o.progress<50?'high':''}" style="width:${o.progress}%"></div></div><small>${o.progress}%</small></td>
         <td><span class="${statusClass(o.status)}">${o.status}</span></td>
@@ -919,8 +1013,9 @@ function render(){
         <td>${s.name}</td>
         <td>${roleMeta[s.role].label}</td>
         <td>${s.branch}</td>
+        <td>${s.zone||""}</td>
         <td>${canManage ? `<button class="chip" onclick="deleteStaff(${s.id})">삭제</button>` : ""}</td>
-      </tr>`).join("") : `<tr><td colspan="4" class="empty-row">등록된 인원이 없습니다.</td></tr>`;
+      </tr>`).join("") : `<tr><td colspan="5" class="empty-row">등록된 인원이 없습니다.</td></tr>`;
   }
 
   updateNavBadges();
