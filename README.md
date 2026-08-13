@@ -6,6 +6,8 @@
 
 운영메뉴얼: [heebonpark.github.io/task-order-solution/manual.html](https://heebonpark.github.io/task-order-solution/manual.html) — 회사 네트워크에서 claude.ai가 차단될 경우 이 주소를 사용하세요 (앱과 같은 도메인).
 
+실제 운영 전환 설계 문서: [heebonpark.github.io/task-order-solution/design.html](https://heebonpark.github.io/task-order-solution/design.html) — 지금의 프론트엔드 데모를 백엔드·로그인·알림이 있는 실제 운영 시스템으로 전환하려면 무엇이 필요한지 정리한 아키텍처 설계 문서입니다.
+
 담당지사·역할(SP/SE/SG/지사장/영업팀장/고객팀장/지사내근/본부장/사업지원팀장/담당자)을 화면 상단에서 선택하면 그 역할 기준으로 화면이 바뀝니다.
 
 ## 공유용 링크
